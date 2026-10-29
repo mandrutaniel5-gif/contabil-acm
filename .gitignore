@@ -8,3 +8,6 @@ Payload/
 *.ipa
 functions/node_modules/
 functions/.env
+release/
+*.jks
+*.keystore

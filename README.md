@@ -50,24 +50,26 @@ npm test             # testele motorului contabil
 
 Funcția `ai` verifică token-ul Firebase, emailul confirmat și lista `ALLOWED_EMAILS`. Cheia Claude nu ajunge niciodată pe dispozitiv. Funcția `cui` caută firme după CUI în registrul public ANAF.
 
-## Windows (Electron)
+## Build pe calculatorul tău (Windows)
 
-```bash
-npm install
-npm run desktop      # rulează local
-npm run build:win    # installer NSIS în dist/ (pune o iconiță 512×512 în build/icon.png)
-```
+Ai nevoie de [Node.js LTS](https://nodejs.org). Pentru Android îți trebuie și [Android Studio](https://developer.android.com/studio), pe care îl deschizi o dată ca să descarce SDK-ul.
 
-## Android și iOS (Capacitor)
+- **Windows:** dublu-clic pe `build-windows.bat`. Installer-ul `.exe` apare în `dist\`.
+- **Android:** dublu-clic pe `build-android.bat`.
+  - La prima rulare creează cheia de semnare în `%USERPROFILE%\.acm-keys\acm-contabil.jks`, în afara proiectului, ca să nu ajungă niciodată în repo.
+  - Notează parola și fă o copie de rezervă a cheii. Fără ea nu mai poți publica actualizări pe Google Play.
+  - Rezultatul apare în `release\`: un `.apk` pentru instalare directă pe telefon și un `.aab` pentru Google Play.
 
-```bash
-npm install
-npx cap add android && npx cap add ios   # o singură dată
-npm run cap:sync
-npm run cap:android                       # Android Studio
-```
+Fără certificat de semnare de cod, Windows afișează la instalare un avertisment SmartScreen („Mai multe informații” → „Rulează oricum”).
 
-Pentru iOS, `npx cap add ios` și build-ul rulează pe macOS. Fără Mac, folosește un workflow GitHub Actions pe `macos-latest`, ca la ACM Docs. Camera funcționează prin selectorul de fișiere. Pe iOS adaugă `NSCameraUsageDescription` și `NSPhotoLibraryUsageDescription` în `Info.plist`.
+## iOS (GitHub Actions)
+
+Xcode rulează doar pe macOS, așa că iOS se construiește pe GitHub:
+1. Deschide Actions → Build → Run workflow.
+2. Alege `ios` (sau `toate`).
+3. După aproximativ 10 minute, `.ipa` nesemnat apare la Artifacts și se instalează prin sideload.
+
+Workflow-ul pornește doar manual, nu la fiecare push.
 
 ## Limitări cunoscute (v1)
 

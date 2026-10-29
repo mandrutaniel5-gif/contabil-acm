@@ -43,8 +43,7 @@ jobs:
           "$SDKM" "platforms;android-36" "build-tools;36.0.0" "platform-tools" > /dev/null
       - run: npm ci
       - run: npx cap add android
-      - name: Permisiune cameră (scanare bonuri)
-        run: sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />#' android/app/src/main/AndroidManifest.xml
+      - run: node scripts/android-camera.cjs
       - run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0e6b6b' --iconBackgroundColorDark '#0e6b6b' --splashBackgroundColor '#f3f5f8' --splashBackgroundColorDark '#0e1115'
       - run: npx cap sync android
       - name: Build APK
