@@ -1,0 +1,10 @@
+node_modules/
+dist/
+android/
+ios/
+ios-build/
+Payload/
+*.apk
+*.ipa
+functions/node_modules/
+functions/.env

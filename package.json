@@ -1,0 +1,46 @@
+{
+  "name": "acm-contabil",
+  "productName": "ACM Contabil",
+  "version": "1.0.0",
+  "description": "Contabilitate în partidă dublă pentru ACM CODE SRL, cu asistent AI",
+  "author": "ACM CODE SRL",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "serve": "npx --yes http-server www -p 5173 -c-1",
+    "desktop": "electron .",
+    "build:win": "electron-builder --win",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "test": "node test/engine.test.mjs",
+    "deploy:functions": "cd functions && npm install && cd .. && firebase deploy --only functions"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.0.0",
+    "fake-indexeddb": "^6.2.6"
+  },
+  "build": {
+    "appId": "ro.acmcode.contabil",
+    "productName": "ACM Contabil",
+    "files": [
+      "electron/**",
+      "www/**"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

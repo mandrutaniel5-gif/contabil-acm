@@ -1,0 +1,86 @@
+# Build ACM Contabil pentru Windows, Android și iOS.
+# Rulează la fiecare push pe main sau manual din tab-ul Actions → "Build" → Run workflow.
+# Fișierele rezultate apar la finalul rulării, la secțiunea Artifacts.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx electron-builder --win nsis --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ACM-Contabil-Windows
+          path: dist/*.exe
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npx cap add android
+      - name: Permisiune cameră (scanare bonuri)
+        run: sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />#' android/app/src/main/AndroidManifest.xml
+      - run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0e6b6b' --iconBackgroundColorDark '#0e6b6b' --splashBackgroundColor '#f3f5f8' --splashBackgroundColorDark '#0e1115'
+      - run: npx cap sync android
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - run: |
+          VER=$(node -p "require('./package.json').version")
+          cp android/app/build/outputs/apk/debug/app-debug.apk "ACM-Contabil-$VER.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ACM-Contabil-Android
+          path: ACM-Contabil-*.apk
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Cel mai nou Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Folosesc $X"; sudo xcode-select -s "$X"
+      - run: npm ci
+      - run: npx cap add ios
+      - run: npx --yes @capacitor/assets generate --ios --iconBackgroundColor '#0e6b6b' --splashBackgroundColor '#f3f5f8' --splashBackgroundColorDark '#0e1115'
+      - run: npx cap sync ios
+      - name: Permisiuni cameră și poze
+        run: |
+          P=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Camera este folosită pentru fotografierea bonurilor și facturilor.'" $P
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Accesul la poze permite atașarea documentelor justificative.'" $P
+      - name: Build (nesemnat)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath ios-build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Împachetare .ipa
+        run: |
+          VER=$(node -p "require('./package.json').version")
+          mkdir Payload
+          cp -R ios-build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qr "ACM-Contabil-$VER.ipa" Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ACM-Contabil-iOS
+          path: ACM-Contabil-*.ipa

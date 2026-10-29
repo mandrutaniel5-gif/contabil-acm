@@ -1,0 +1,8 @@
+{
+  "appId": "ro.acmcode.contabil",
+  "appName": "ACM Contabil",
+  "webDir": "www",
+  "server": { "androidScheme": "https", "iosScheme": "capacitor" },
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false }
+}
