@@ -1,0 +1,135 @@
+ACMTEST START Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ACMContabil/1.1.0 Chrome/156.0.8078.49 Electron/45.1.0 Safari/537.36 {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST date de test create, repornesc aplicația
+ACMTEST START Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ACMContabil/1.1.0 Chrome/156.0.8078.49 Electron/45.1.0 Safari/537.36 {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran acasa {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran documente {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran documente/nou {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran banca {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran operatii {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran parteneri {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/jurnal {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/balanta {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/fisa {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/casa {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/tva {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/mijloace {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/inchidere {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/inventar {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/situatii {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran registre/an {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran declaratii {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran declaratii/impozit {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran declaratii/saft {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran declaratii/salarii {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran declaratii/tva {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare/chitanta {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare/dispozitie {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare/decont {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare/deplasare {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran formulare/hotarare {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran ghid {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/firma {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/fiscal {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/sync {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/spv {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/auto {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/solduri {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/date {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST OK ecran setari/aspect {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST ACMSHOT acasa
+ACMSHOT acasa
+ACMTEST ACMSHOT documente_nou
+ACMSHOT documente_nou
+ACMTEST ACMSHOT banca
+ACMSHOT banca
+ACMTEST ACMSHOT registre_balanta
+ACMSHOT registre_balanta
+ACMTEST ACMSHOT declaratii_impozit
+ACMSHOT declaratii_impozit
+ACMTEST ACMSHOT formulare_chitanta
+ACMSHOT formulare_chitanta
+ACMTEST ACMSHOT setari_sync
+ACMSHOT setari_sync
+ACMTAP 359 410 documente/nou #total
+ACMTEST OK fără zoom la atingere documente/nou #total {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_documente_nou_total
+ACMSHOT tap_documente_nou_total
+ACMTAP 359 341 documente/nou #pnume
+ACMTEST OK fără zoom la atingere documente/nou #pnume {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_documente_nou_pnume
+ACMSHOT tap_documente_nou_pnume
+ACMTAP 359 444 documente/nou #cont
+ACMTEST OK fără zoom la atingere documente/nou #cont {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_documente_nou_cont
+ACMSHOT tap_documente_nou_cont
+ACMTAP 635 250 formulare/chitanta #suma
+ACMTEST OK fără zoom la atingere formulare/chitanta #suma {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_formulare_chitanta_suma
+ACMSHOT tap_formulare_chitanta_suma
+ACMTAP 753 290 setari/firma #cui
+ACMTEST OK fără zoom la atingere setari/firma #cui {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_setari_firma_cui
+ACMSHOT tap_setari_firma_cui
+ACMTAP 1117 169 operatii #o-suma
+ACMTEST OK fără zoom la atingere operatii #o-suma {"iw":1280,"vw":1280,"sw":1280,"scale":1,"focus":true}
+ACMTEST ACMSHOT tap_operatii_o-suma
+ACMSHOT tap_operatii_o-suma
+ACMTAP 898 132 salariat nume
+ACMTEST OK fără zoom în foaia de salariat {"iw":1280,"vw":1280,"sw":1280,"scale":1}
+ACMTEST ACMSHOT foaie_salariat
+ACMSHOT foaie_salariat
+ACMTEST OK curs BNR prin HTTP nativ 5.3449 
+ACMTEST OK ANAF CUI prin HTTP nativ DANTE INTERNATIONAL SA
+ACMTEST OK ANAF e-Factura (validator) prin HTTP nativ 200 {"stare":"nok","Messages":[{"message":"Fisierul transmis nu este valid. org.xml.
+ACMTEST OK WebCrypto ECDH/HKDF + DecompressionStream 
+ACMTEST GATA {"total":47,"esuate":0}
+ACMRES {"nume":"ecran acasa","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran documente","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran documente/nou","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran banca","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran operatii","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran parteneri","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/jurnal","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/balanta","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/fisa","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/casa","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/tva","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/mijloace","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/inchidere","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/inventar","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/situatii","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran registre/an","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran declaratii","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran declaratii/impozit","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran declaratii/saft","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran declaratii/salarii","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran declaratii/tva","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare/chitanta","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare/dispozitie","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare/decont","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare/deplasare","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran formulare/hotarare","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran ghid","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/firma","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/fiscal","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/sync","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/spv","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/auto","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/solduri","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/date","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"ecran setari/aspect","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"fără zoom la atingere documente/nou #total","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom la atingere documente/nou #pnume","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom la atingere documente/nou #cont","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom la atingere formulare/chitanta #suma","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom la atingere setari/firma #cui","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom la atingere operatii #o-suma","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"}
+ACMRES {"nume":"fără zoom în foaia de salariat","ok":true,"detalii":"{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"}
+ACMRES {"nume":"curs BNR prin HTTP nativ","ok":true,"detalii":"5.3449 "}
+ACMRES {"nume":"ANAF CUI prin HTTP nativ","ok":true,"detalii":"DANTE INTERNATIONAL SA"}
+ACMRES {"nume":"ANAF e-Factura (validator) prin HTTP nativ","ok":true,"detalii":"200 {\"stare\":\"nok\",\"Messages\":[{\"message\":\"Fisierul transmis nu este valid. org.xml."}
+ACMRES {"nume":"WebCrypto ECDH/HKDF + DecompressionStream","ok":true,"detalii":""}
+ACMDONE 47
+titlu: Declarații — ACM Contabil | acmHost: true

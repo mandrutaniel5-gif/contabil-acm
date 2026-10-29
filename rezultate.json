@@ -1,0 +1,237 @@
+[
+ {
+  "nume": "ecran acasa",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran documente",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran documente/nou",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran banca",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran operatii",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran parteneri",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/jurnal",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/balanta",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/fisa",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/casa",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/tva",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/mijloace",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/inchidere",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/inventar",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/situatii",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran registre/an",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran declaratii",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran declaratii/impozit",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran declaratii/saft",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran declaratii/salarii",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran declaratii/tva",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare/chitanta",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare/dispozitie",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare/decont",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare/deplasare",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran formulare/hotarare",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran ghid",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/firma",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/fiscal",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/sync",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/spv",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/auto",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/solduri",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/date",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "ecran setari/aspect",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "fără zoom la atingere documente/nou #total",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom la atingere documente/nou #pnume",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom la atingere documente/nou #cont",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom la atingere formulare/chitanta #suma",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom la atingere setari/firma #cui",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom la atingere operatii #o-suma",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1,\"focus\":true}"
+ },
+ {
+  "nume": "fără zoom în foaia de salariat",
+  "ok": true,
+  "detalii": "{\"iw\":1280,\"vw\":1280,\"sw\":1280,\"scale\":1}"
+ },
+ {
+  "nume": "curs BNR prin HTTP nativ",
+  "ok": true,
+  "detalii": "5.3449 "
+ },
+ {
+  "nume": "ANAF CUI prin HTTP nativ",
+  "ok": true,
+  "detalii": "DANTE INTERNATIONAL SA"
+ },
+ {
+  "nume": "ANAF e-Factura (validator) prin HTTP nativ",
+  "ok": true,
+  "detalii": "200 {\"stare\":\"nok\",\"Messages\":[{\"message\":\"Fisierul transmis nu este valid. org.xml."
+ },
+ {
+  "nume": "WebCrypto ECDH/HKDF + DecompressionStream",
+  "ok": true,
+  "detalii": ""
+ }
+]
