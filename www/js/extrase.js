@@ -176,6 +176,15 @@ export function propune(t, ctx) {
   const contBanca = ctx.contBanca || '5121';
   const S = Math.abs(t.suma);
 
+  // 0. deja înregistrată (bon plătit cu cardul, operațiune sau formular introduse înainte de extras): doar se leagă
+  const zi = (x, n) => { const d = new Date(x + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const legate = ctx.legate || new Set();
+  const existenta = (ctx.note || []).find((n) => !legate.has(n.id) && !n.sursa?.extrasId && n.data >= zi(t.data, -7) && n.data <= zi(t.data, 3)
+    && n.linii.some((l) => Math.abs(Number(l.suma) - S) < 0.011 && (sens > 0 ? l.d === contBanca : l.c === contBanca)));
+  if (existenta) {
+    return { incredere: 95, legaNota: existenta.id, motiv: `Deja înregistrată: ${existenta.explicatie || existenta.document || ''}`.slice(0, 140), linii: [] };
+  }
+
   // 1. factură deschisă (client sau furnizor)
   const deschise = documente.filter((d) => d.plata === 'neplatit' && !d.achitat && (sens > 0 ? d.tip === 'venit' : d.tip === 'cheltuiala'));
   const best = deschise.map((d) => ({ d, s: scorDocument(t, d) })).sort((a, b) => b.s - a.s)[0];
@@ -189,12 +198,32 @@ export function propune(t, ctx) {
       partener: d.partener?.nume || '',
     };
   }
-  // 2. impozite și taxe (ANAF / Trezorerie)
-  if (sens < 0 && /anaf|trezorerie|treasury|buget(ul)? (de )?stat|impozit|cont unic|tva/.test(text)) {
-    const candidati = [['4418', 'Impozit micro'], ['4411', 'Impozit pe profit'], ['4423', 'TVA de plată'], ['446', 'Impozit pe dividende'], ['444', 'Impozit pe salarii'], ['4315', 'CAS'], ['4316', 'CASS'], ['436', 'CAM']];
-    const potrivit = candidati.find(([c]) => Math.abs((solduri[c] || 0) - S) < 0.6);
-    const [c, m] = potrivit || (setari.regim === 'micro' ? ['4418', 'Impozit micro'] : ['4411', 'Impozit pe profit']);
-    return { incredere: potrivit ? 90 : 60, motiv: `Plată ${m} la ANAF`, linii: [{ d: c, c: contBanca, suma: S }] };
+  // 2. impozite și taxe (ANAF / Trezorerie): o plată poate acoperi mai multe obligații deodată (contul unic),
+  //    iar obligațiile se adună lună de lună; căutăm combinația de obligații neplătite care dă exact suma.
+  if (sens < 0 && /anaf|trezorerie|treasury|buget(ul)? (de )?stat|cont unic|d112|d100|d300|impozit (pe|micro)/.test(text)) {
+    const NUME = { 4418: 'impozit micro', 4411: 'impozit pe profit', 4423: 'TVA', 446: 'impozit pe dividende', 444: 'impozit pe salarii', 4315: 'CAS', 4316: 'CASS', 436: 'CAM' };
+    const items = obligatiiDeschise(ctx.note || [], Object.keys(NUME), t.data);
+    let best = null;
+    const n = Math.min(items.length, 16);
+    for (let mask = 1; mask < 1 << n; mask++) {
+      let sum = 0, k = 0;
+      for (let i = 0; i < n; i++) if (mask & (1 << i)) { sum += items[i].suma; k++; }
+      if (Math.abs(sum - S) < 0.6 && (!best || k < best.k)) best = { mask, k };
+    }
+    if (best) {
+      const sel = items.slice(0, n).filter((_, i) => best.mask & (1 << i));
+      const per = {}; for (const x of sel) per[x.cont] = r2((per[x.cont] || 0) + x.suma);
+      return { incredere: 92, motiv: `Plată la ANAF: ${[...new Set(sel.map((x) => NUME[x.cont] + ' ' + x.per))].join(', ')}`, linii: Object.entries(per).map(([c, v]) => ({ d: c, c: contBanca, suma: v, expl: 'Plată ' + NUME[c] })) };
+    }
+    const [c, m] = setari.regim === 'micro' ? ['4418', 'impozit micro'] : ['4411', 'impozit pe profit'];
+    return { incredere: 55, motiv: `Plată la ANAF, probabil ${m}. Suma nu se potrivește cu nicio datorie din aplicație: verifică.`, linii: [{ d: c, c: contBanca, suma: S }] };
+  }
+  // 2b. salariul net plătit unui angajat
+  if (sens < 0 && (solduri['421'] || 0) > 0.009) {
+    const ang = (ctx.salariati || []).find((a) => fara(a.nume).split(/\s+/).filter((w) => w.length > 2).every((w) => text.includes(w)));
+    if (ang || /salariu|salar|lichidare|avans chenzina/.test(text)) {
+      return { incredere: ang && S <= solduri['421'] + 0.01 ? 92 : 70, motiv: `Plată salariu${ang ? ' ' + ang.nume : ''}`, linii: [{ d: '421', c: contBanca, suma: S }] };
+    }
   }
   // 3. reguli de text (comisioane, dobânzi, numerar, capital)
   for (const r of REGULI_TEXT) {
@@ -204,6 +233,10 @@ export function propune(t, ctx) {
     return { incredere: 90, motiv: r.motiv, linii: sens > 0 ? [{ d: contBanca, c: r.cont, suma: S }] : [{ d: r.cont, c: contBanca, suma: S }] };
   }
   // 4. administratorul
+  // dividende plătite asociatului (după hotărârea de distribuire: 457 are sold)
+  if (sens < 0 && /dividend/.test(text) && (solduri['457'] || 0) > 0.009) {
+    return { incredere: S <= solduri['457'] + 0.01 ? 90 : 60, motiv: 'Plată dividende către asociat', linii: [{ d: '457', c: contBanca, suma: S }] };
+  }
   const admin = fara(setari.administrator).split(/\s+/).filter((w) => w.length > 2);
   if (admin.length && admin.filter((w) => text.includes(w)).length >= Math.min(2, admin.length)) {
     return sens > 0
@@ -216,10 +249,46 @@ export function propune(t, ctx) {
   }
   // 6. plată cu cardul fără factură în aplicație (abonamente, reclame): se creează cheltuiala, de completat cu factura
   if (sens < 0) {
+    const inv = ctx.invatat?.get(cheieContraparte(t));
+    if (inv) return { incredere: inv.n >= 1 ? 88 : 70, motiv: `La fel ca plățile anterioare către ${t.contraparte || 'acest furnizor'}: ${inv.nume}. Atașează factura când o primești.`, cheltuialaNoua: { cont: inv.cont, tvaDeductibil: inv.tvaDeductibil ?? 100 }, linii: [{ d: inv.cont, c: contBanca, suma: S }] };
     const sug = sugestieLocala(`${t.contraparte} ${t.detalii}`, S);
     if (sug) return { incredere: 65, motiv: `Plată ${t.contraparte || ''} — ${sug.motiv} Atașează factura când o primești.`.trim(), cheltuialaNoua: { cont: sug.cont, tvaDeductibil: sug.tvaDeductibil }, linii: [{ d: sug.cont, c: contBanca, suma: S }] };
   }
   return { incredere: 0, motiv: sens > 0 ? 'Încasare neidentificată' : 'Plată neidentificată', linii: [] };
+}
+
+const cheieContraparte = (t) => fara(t.contraparte || t.detalii || '').replace(/\d+([.,]\d+)?/g, ' ').replace(/\b(pos|usd|eur|ron|srl|sa|inc|ltd)\b/g, ' ').replace(/[^a-z ]/g, ' ').split(/\s+/).filter((w) => w.length > 2).slice(0, 3).join(' ');
+/** Ce a ales utilizatorul la plățile anterioare (cheltuieli fără factură, plătite cu cardul), pe contraparte. */
+function invatat(extrase) {
+  const m = new Map();
+  for (const x of extrase) for (const y of x.tranzactii) {
+    const p = y.propunere;
+    if (y.stare !== 'inregistrat' || !p || p.legaNota || p.docId || !p.cheltuialaNoua || y.suma > 0) continue;
+    const k = cheieContraparte(y); if (!k) continue;
+    const v = m.get(k) || { n: 0 };
+    m.set(k, { cont: p.cheltuialaNoua.cont, tvaDeductibil: p.cheltuialaNoua.tvaDeductibil, nume: (p.motiv || '').split('—')[1]?.split('.')[0]?.trim() || p.cheltuialaNoua.cont, n: v.n + 1 });
+  }
+  return m;
+}
+
+/** Obligațiile neplătite pe conturi, pe luni (cele mai vechi se sting primele cu plățile deja făcute). */
+export function obligatiiDeschise(note, conturi, pana = '9999-12-31') {
+  const out = [];
+  for (const cont of conturi) {
+    const cred = {}; let deb = 0;
+    for (const n of note) {
+      if (n.data > pana) continue;
+      for (const l of n.linii) {
+        if (l.c === cont) { const k = n.data.slice(0, 7); cred[k] = r2((cred[k] || 0) + Number(l.suma)); }
+        if (l.d === cont) deb = r2(deb + Number(l.suma));
+      }
+    }
+    for (const k of Object.keys(cred).sort()) {
+      const v = r2(cred[k] - Math.min(deb, cred[k])); deb = r2(Math.max(0, deb - cred[k]));
+      if (v > 0.009) out.push({ cont, per: k.slice(5) + '.' + k.slice(0, 4), luna: k, suma: v });
+    }
+  }
+  return out.sort((a, b) => a.luna.localeCompare(b.luna)).slice(-16);
 }
 
 function soldurile(note, setari) {
@@ -249,14 +318,20 @@ export async function proceseaza(extrasId, { autoPrag = 80, setari } = {}) {
   setari = setari || await getSetari();
   const ex = await db.get('extrase', extrasId);
   let auto = 0, deConfirmat = 0;
+  const { lista: listaSalariati } = await import('./salarii.js');
+  const salariati = await listaSalariati();
+  const toate = await db.all('extrase');
+  const legate = new Set(toate.flatMap((x) => x.tranzactii.map((y) => y.legat || y.notaId).filter(Boolean)));
+  const inv = invatat(toate);
   for (const t of ex.tranzactii) {
     if (t.stare === 'inregistrat' || t.stare === 'ignorat') continue;
     const documente = await db.all('documente');
     const note = await db.all('note');
-    const p = propune(t, { documente, setari, solduri: soldurile(note, setari), contBanca: ex.contBanca });
+    const p = propune(t, { documente, note, setari, solduri: soldurile(note, setari), contBanca: ex.contBanca, legate, salariati, invatat: inv });
+    if (p.legaNota) legate.add(p.legaNota);
     t.propunere = p;
-    if (p.incredere >= autoPrag && p.linii.length) { await aplica(ex, t, p, setari); auto++; }
-    else { t.stare = p.linii.length ? 'propus' : 'neclar'; deConfirmat++; }
+    if (p.incredere >= autoPrag && (p.linii.length || p.legaNota)) { await aplica(ex, t, p, setari); auto++; }
+    else { t.stare = p.linii.length || p.legaNota ? 'propus' : 'neclar'; deConfirmat++; }
   }
   await db.put('extrase', ex);
   return { extrasId: ex.id, total: ex.tranzactii.length, auto, deConfirmat };
@@ -265,6 +340,7 @@ export async function proceseaza(extrasId, { autoPrag = 80, setari } = {}) {
 /** Înregistrează o tranzacție: nota contabilă, factura marcată achitată sau cheltuiala nouă. */
 export async function aplica(ex, t, p, setari) {
   setari = setari || await getSetari();
+  if (p.legaNota) { t.stare = 'inregistrat'; t.legat = p.legaNota; t.propunere = p; return; }
   let docId = p.docId;
   if (p.cheltuialaNoua) {
     const { salveazaDocument } = await import('./engine.js');
@@ -309,6 +385,7 @@ export async function ignora(extrasId, txId) {
 export async function anuleaza(extrasId, txId) {
   const ex = await db.get('extrase', extrasId);
   const t = ex.tranzactii.find((x) => x.id === txId);
+  if (t.legat) { delete t.legat; t.stare = 'nou'; await db.put('extrase', ex); return; }
   if (t.notaId) await db.del('note', t.notaId);
   if (t.docId) {
     const d = await db.get('documente', t.docId);

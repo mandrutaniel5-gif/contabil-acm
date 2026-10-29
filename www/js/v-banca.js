@@ -50,8 +50,8 @@ function rand(x, t) {
     <div class="grow">
       <div class="t">${e(t.contraparte || t.detalii || 'Tranzacție')}</div>
       <div class="m">${dataRo(t.data)} · ${e((t.detalii || '').slice(0, 90))}</div>
-      <div class="small" style="margin-top:6px">${p.linii.length ? `${p.linii.map((l) => eqHTML(l.d, l.c, null, cont)).join(' ')} <span class="muted">${e(p.motiv)}</span>` : `<span class="badge warn">neidentificată</span> <span class="muted">Alege ce reprezintă.</span>`}</div>
-      <div class="row" style="margin-top:8px">${p.linii.length ? '<button class="btn sm primary" data-ok>Confirmă</button>' : ''}<button class="btn sm" data-alt>${p.linii.length ? 'Altceva' : 'Alege'}</button><button class="btn sm ghost" data-ign>Ignoră</button></div>
+      <div class="small" style="margin-top:6px">${p.legaNota ? `<span class="badge ok">deja înregistrată</span> <span class="muted">${e(p.motiv)}</span>` : p.linii.length ? `${p.linii.map((l) => eqHTML(l.d, l.c, null, cont)).join(' ')} <span class="muted">${e(p.motiv)}</span>` : `<span class="badge warn">neidentificată</span> <span class="muted">Alege ce reprezintă.</span>`}</div>
+      <div class="row" style="margin-top:8px">${p.linii.length || p.legaNota ? '<button class="btn sm primary" data-ok>Confirmă</button>' : ''}<button class="btn sm" data-alt>${p.linii.length || p.legaNota ? 'Altceva' : 'Alege'}</button><button class="btn sm ghost" data-ign>Ignoră</button></div>
     </div>
     <div class="amt num" style="color:${t.suma > 0 ? 'var(--ok)' : 'inherit'}">${t.suma > 0 ? '+' : '−'}${lei(Math.abs(t.suma))}</div>
   </li>`;

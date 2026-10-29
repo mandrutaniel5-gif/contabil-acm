@@ -3,10 +3,17 @@ import { lei, r2, dataRo, LUNI, trimDinLuna, trimInterval, lunaInterval, reguli,
 import { termene, zilePana, d100Micro, estimareProfit, d300, calculSalariu, saftXML } from './declaratii.js';
 import { VERSIUNE } from './version.js';
 
-const _n = new Date(); const _prev = _n.getMonth() === 0 ? 12 : _n.getMonth(); // luna anterioară, 1-12
-const st = { an: _n.getMonth() === 0 ? _n.getFullYear() - 1 : _n.getFullYear(), t: Math.ceil(_prev / 3), luna: _prev };
+// perioada implicită: luna/trimestrul anterior; se recalculează în fiecare zi (aplicația poate sta deschisă zile întregi)
+const st = {};
+function perioadaImplicita() {
+  const n = new Date(); const zi = n.toISOString().slice(0, 10);
+  if (st.zi === zi) return;
+  const prev = n.getMonth() === 0 ? 12 : n.getMonth(); // luna anterioară, 1-12
+  Object.assign(st, { zi, an: n.getMonth() === 0 ? n.getFullYear() - 1 : n.getFullYear(), t: Math.ceil(prev / 3), luna: prev });
+}
 
 export async function render(main, ctx, params) {
+  perioadaImplicita();
   const s = ctx.setari;
   const tabs = [['calendar', 'Calendar']];
   tabs.push(['impozit', s.regim === 'micro' ? 'D100 — impozit micro' : 'Impozit pe profit']);
@@ -20,7 +27,7 @@ export async function render(main, ctx, params) {
   <div id="dv"></div>`;
   const dv = $('#dv', main);
   const rerender = () => render(main, ctx, params);
-  ({ calendar, impozit, tva, saft, salarii }[tab] || calendar)(dv, ctx, rerender);
+  await ({ calendar, impozit, tva, saft, salarii }[tab] || calendar)(dv, ctx, rerender);
 }
 
 function selTrim(rer) {
@@ -158,29 +165,120 @@ function saft(el, ctx, rer) {
   };
 }
 
-function salarii(el, ctx) {
+async function salarii(el, ctx, rer) {
   const s = ctx.setari;
-  el.innerHTML = `<section class="panel" style="max-width:760px">
-    <h2>Calculator salariu și D112</h2>
-    ${s.areSalariati ? '' : '<p class="muted">Firma nu are salariați în Setări. D112 se depune doar pentru lunile în care se plătesc salarii sau indemnizații.</p>'}
-    <div class="fields-2">
-      <label class="field"><span>Salariu brut (lei)</span><input type="number" id="s-brut" value="4050"></label>
-      <label class="field"><span>Deducere personală (lei)</span><input type="number" id="s-ded" value="0"><small>Depinde de salariu și de persoanele în întreținere. Valoarea exactă o confirmă asistentul sau contabilul.</small></label>
+  const S = await import('./salarii.js');
+  const { openSheet, closeSheet, confirma } = await import('./ui.js');
+  const { tipareste, antetFirma } = await import('./v-formulare.js');
+  const lst = await S.lista();
+  const an = st.an, luna = st.luna;
+  const { to } = lunaInterval(an, luna);
+  const stat = S.statDePlata(lst, an, luna, s);
+  const azi = new Date().toISOString().slice(0, 10);
+  const cm = S.conditieMicro(lst, azi, s);
+  const perioada = `${an}-${String(luna).padStart(2, '0')}`;
+  const notaSal = ctx.note.find((n) => n.auto === 'salarii' && n.autoPerioada === perioada);
+  const urm = luna === 12 ? [an + 1, 1] : [an, luna + 1];
+  const termen = `25.${String(urm[1]).padStart(2, '0')}.${urm[0]}`;
+  const tipNume = { cim: 'Contract de muncă', mandat: 'Contract de mandat (administrator)' };
+
+  el.innerHTML = `
+  ${s.regim === 'micro' ? `<div class="tip ${cm.ok ? 'ok' : 'err'}"><span class="dot"></span><div class="grow"><p>${cm.ok
+    ? `<b>Condiția de salariat pentru micro este îndeplinită</b> (${cm.mandatOk ? 'administrator cu contract de mandat plătit cel puțin cu salariul minim' : `${cm.norme / 8 === 1 ? 'un salariat cu normă întreagă' : `normă cumulată ${cm.norme} ore/zi`}`}).`
+    : `<b>Microîntreprinderea trebuie să aibă un salariat cu normă întreagă</b> (sau un administrator cu contract de mandat plătit cel puțin cu salariul minim).${cm.termen ? ` Termen: <b>${dataRo(cm.termen)}</b>.` : ''} Altfel firma trece la impozit pe profit din trimestrul respectiv.${!s.dataInfiintare ? ' Completează data înființării în Setări → Firma ca să știi termenul de 90 de zile.' : ''}`}</p></div></div>` : ''}
+  <section class="panel">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Salariați</h2><button class="btn sm primary" id="s-add">${icon('plus')}Adaugă</button></div>
+    ${lst.length ? `<ul class="list" style="margin-top:10px">${lst.map((a) => `<li class="clickable" data-ang="${a.id}"><div class="grow"><div class="t">${e(a.nume)}</div>
+      <div class="m">${tipNume[a.tip] || ''} · din ${dataRo(a.deLa)}${a.panaLa ? ' până pe ' + dataRo(a.panaLa) : ''} · ${a.tip === 'cim' ? (Number(a.norma) || 8) + ' ore/zi · ' : ''}brut ${lei(a.brut)} lei</div></div>
+      ${a.panaLa && a.panaLa < azi ? '<span class="badge">plecat</span>' : '<span class="badge ok">activ</span>'}</li>`).join('')}</ul>`
+    : '<p class="muted">Niciun salariat. Adaugă angajații (și administratorul, dacă are contract de mandat) ca aplicația să facă singură statul de plată, nota contabilă lunară și să recunoască plățile în extras.</p>'}
+  </section>
+  <section class="panel">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Statul de plată</h2>
+      <div class="row"><select id="d-luna" style="width:auto">${LUNI.map((l, i) => `<option value="${i + 1}" ${luna === i + 1 ? 'selected' : ''}>${l}</option>`).join('')}</select><select id="d-an" style="width:auto">${[an - 1, an, an + 1].map((y) => `<option ${y === an ? 'selected' : ''}>${y}</option>`).join('')}</select></div></div>
+    ${stat.rand.length ? `<div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Salariat</th><th class="n">Brut</th><th class="n">CAS 25%</th><th class="n">CASS 10%</th><th class="n">Impozit</th><th class="n">Net</th><th class="n">CAM 2,25%</th></tr></thead><tbody>
+      ${stat.rand.map((r) => `<tr><td>${e(r.nume)}${r.proportie < 100 ? ` <span class="muted small">(${r.proportie}% din lună)</span>` : ''}${r.neimpozabil ? ` <span class="muted small">· ${r.neimpozabil} lei netaxabili</span>` : ''}${r.deducere ? ` <span class="muted small">· deducere ${lei(r.deducere)}</span>` : ''}</td><td class="n">${lei(r.brut)}</td><td class="n">${lei(r.cas)}</td><td class="n">${lei(r.cass)}</td><td class="n">${lei(r.impozit)}</td><td class="n"><b>${lei(r.net)}</b></td><td class="n">${lei(r.cam)}</td></tr>`).join('')}
+      </tbody><tfoot><tr class="total"><td>Total</td><td class="n">${lei(stat.tot.brut)}</td><td class="n">${lei(stat.tot.cas)}</td><td class="n">${lei(stat.tot.cass)}</td><td class="n">${lei(stat.tot.impozit)}</td><td class="n">${lei(stat.tot.net)}</td><td class="n">${lei(stat.tot.cam)}</td></tr></tfoot></table></div>
+      <div class="figures" style="margin-top:12px">
+        <div class="figure"><div class="label">De plătit salariaților</div><div class="value num">${lei(stat.tot.net)}<small>lei</small></div><div class="hint">transfer din bancă, de obicei până pe 10-15 ale lunii următoare</div></div>
+        <div class="figure"><div class="label">De plătit la ANAF</div><div class="value num">${lei(stat.deVirat)}<small>lei</small></div><div class="hint">CAS + CASS + impozit + CAM, cu D112, până pe ${termen}</div></div>
+      </div>
+      <div class="tip ${notaSal ? 'ok' : ''}"><span class="dot"></span><div class="grow"><p>${notaSal ? 'Nota contabilă de salarii pentru luna aceasta e înregistrată (641 = 421, reținerile și CAM).' : 'Nota contabilă se înregistrează singură la închiderea lunii.'} Plățile din extras (salariul net și plata la ANAF) se recunosc automat.</p>
+        <div class="act"><button class="btn sm" id="s-print">Tipărește statul de plată</button><button class="btn sm ghost" data-ai="Cum depun declarația D112 pentru salariile din ${LUNI[luna - 1]} ${an}? Am ${stat.rand.length} ${stat.rand.length === 1 ? 'salariat' : 'salariați'}, brut total ${stat.tot.brut} lei, de plată ${stat.deVirat} lei.">Cum depun D112?</button></div></div></div>`
+    : '<p class="muted" style="margin-top:10px">Niciun salariat activ în luna aleasă. D112 se depune doar pentru lunile cu salarii sau indemnizații.</p>'}
+  </section>
+  <details class="panel"><summary style="cursor:pointer;font-weight:600">Calculator rapid de salariu</summary>
+    <div class="fields-2" style="margin-top:10px">
+      <label class="field"><span>Salariu brut (lei)</span><input type="number" id="s-brut" value="${S.salariuMinim(azi, s)}"></label>
+      <label class="field"><span>Persoane în întreținere</span><input type="number" id="s-pers" value="0" min="0" max="9"></label>
     </div>
     <div id="s-out"></div>
-    <div class="tip warn"><span class="dot"></span><div class="grow"><p>Calculul nu include facilitățile speciale (ex. suma netaxabilă pentru salariul minim, scutirile pentru persoanele cu dizabilități). Pentru angajați reali, statul de plată și D112 se întocmesc de obicei cu un soft de salarizare sau de către contabil.</p></div></div>
-  </section>`;
+  </details>`;
+
+  $('#d-luna', el).onchange = (ev) => { st.luna = Number(ev.target.value); rer(); };
+  $('#d-an', el).onchange = (ev) => { st.an = Number(ev.target.value); rer(); };
   const calc = () => {
-    const c = calculSalariu(Number($('#s-brut', el).value) || 0, $('#s-ded', el).value, s);
+    const c = S.calcul({ tip: 'cim', brut: Number($('#s-brut', el).value) || 0, persoane: Number($('#s-pers', el).value) || 0 }, azi, s);
     $('#s-out', el).innerHTML = `<div class="table-wrap"><table><tbody>
-      <tr><td>Salariu brut</td><td class="n">${lei(c.brut)}</td><td class="muted">641 = 421</td></tr>
-      <tr><td>CAS 25% (reținut din salariu)</td><td class="n">${lei(c.cas)}</td><td class="muted">421 = 4315</td></tr>
-      <tr><td>CASS 10% (reținut din salariu)</td><td class="n">${lei(c.cass)}</td><td class="muted">421 = 4316</td></tr>
-      <tr><td>Impozit 10%</td><td class="n">${lei(c.impozit)}</td><td class="muted">421 = 444</td></tr>
-      <tr class="total"><td>Salariu net</td><td class="n">${lei(c.net)}</td><td></td></tr>
-      <tr><td>CAM 2,25% (plătit de firmă)</td><td class="n">${lei(c.cam)}</td><td class="muted">6461 = 436</td></tr>
-      <tr><td><b>Cost total pentru firmă</b></td><td class="n"><b>${lei(c.costTotal)}</b></td><td></td></tr>
-    </tbody></table></div>`;
+      <tr><td>Salariu brut</td><td class="n">${lei(c.brut)}</td></tr>
+      ${c.neimpozabil ? `<tr><td>Sumă netaxabilă (salariul minim)</td><td class="n">${lei(c.neimpozabil)}</td></tr>` : ''}
+      <tr><td>CAS 25%</td><td class="n">${lei(c.cas)}</td></tr><tr><td>CASS 10%</td><td class="n">${lei(c.cass)}</td></tr>
+      ${c.deducere ? `<tr><td>Deducere personală</td><td class="n">${lei(c.deducere)}</td></tr>` : ''}
+      <tr><td>Impozit 10%</td><td class="n">${lei(c.impozit)}</td></tr>
+      <tr class="total"><td>Salariu net</td><td class="n">${lei(c.net)}</td></tr>
+      <tr><td>CAM 2,25% (plătit de firmă)</td><td class="n">${lei(c.cam)}</td></tr>
+      <tr><td><b>Cost total pentru firmă</b></td><td class="n"><b>${lei(c.cost)}</b></td></tr></tbody></table></div>`;
   };
-  el.addEventListener('input', calc); calc();
+  $('#s-brut', el).oninput = calc; $('#s-pers', el).oninput = calc; calc();
+
+  if ($('#s-print', el)) $('#s-print', el).onclick = () => tipareste(`<div class="pf">${antetFirma(s)}<h1>Stat de plată — ${LUNI[luna - 1]} ${an}</h1>
+    <table><thead><tr><th>Nr.</th><th>Nume</th><th>Brut</th><th>CAS</th><th>CASS</th><th>Impozit</th><th>Net</th><th>Semnătura</th></tr></thead><tbody>
+    ${stat.rand.map((r, i) => `<tr><td>${i + 1}</td><td>${e(r.nume)}</td><td>${lei(r.brut)}</td><td>${lei(r.cas)}</td><td>${lei(r.cass)}</td><td>${lei(r.impozit)}</td><td>${lei(r.net)}</td><td></td></tr>`).join('')}
+    <tr><td></td><td><b>Total</b></td><td>${lei(stat.tot.brut)}</td><td>${lei(stat.tot.cas)}</td><td>${lei(stat.tot.cass)}</td><td>${lei(stat.tot.impozit)}</td><td>${lei(stat.tot.net)}</td><td></td></tr></tbody></table>
+    <p>CAM 2,25% datorat de angajator: ${lei(stat.tot.cam)} lei. Total de virat la bugetul de stat: ${lei(stat.deVirat)} lei.</p>
+    <div class="pf-sem"><div>Întocmit,<br><br>______________</div><div>Administrator,<br>${e(s.administrator || '')}<br>______________</div></div></div>`);
+
+  const editeaza = (a) => {
+    const nou = !a;
+    a = a || { id: 'ang-' + Date.now().toString(36), tip: 'cim', deLa: azi, brut: S.salariuMinim(azi, s), norma: 8, persoane: 0, sub26: false, functieBaza: true };
+    const sh = openSheet(nou ? 'Salariat nou' : a.nume, `
+      <label class="field"><span>Nume și prenume</span><input type="text" id="a-nume" value="${e(a.nume || '')}"></label>
+      <label class="field"><span>Tip contract</span><select id="a-tip"><option value="cim" ${a.tip === 'cim' ? 'selected' : ''}>Contract individual de muncă</option><option value="mandat" ${a.tip === 'mandat' ? 'selected' : ''}>Contract de mandat (administrator)</option></select></label>
+      <div class="fields-2">
+        <label class="field"><span>Data începerii</span><input type="date" id="a-dela" value="${e(a.deLa || '')}"></label>
+        <label class="field"><span>Data încetării</span><input type="date" id="a-pana" value="${e(a.panaLa || '')}"><small>Gol dacă lucrează în continuare.</small></label>
+        <label class="field"><span>Salariu brut lunar (lei)</span><input type="number" step="1" id="a-brut" value="${e(a.brut)}"><small>Salariul minim acum: ${lei(S.salariuMinim(azi, s))} lei.</small></label>
+        <label class="field" id="a-norma-f"><span>Normă (ore pe zi)</span><select id="a-norma">${[8, 6, 4, 2].map((h) => `<option value="${h}" ${Number(a.norma || 8) === h ? 'selected' : ''}>${h === 8 ? '8 ore — normă întreagă' : h + ' ore — parțial'}</option>`).join('')}</select></label>
+        <label class="field" id="a-pers-f"><span>Persoane în întreținere</span><input type="number" min="0" max="9" id="a-pers" value="${e(a.persoane || 0)}"></label>
+      </div>
+      <div id="a-chk"><label class="check"><input type="checkbox" id="a-sub26" ${a.sub26 ? 'checked' : ''}><span>Are sub 26 de ani (deducere personală mai mare)</span></label>
+      <label class="check"><input type="checkbox" id="a-baza" ${a.functieBaza !== false ? 'checked' : ''}><span>Aici are funcția de bază (primește deducerea personală)</span></label></div>
+      <p class="muted small" id="a-info"></p>`,
+      `<div class="row end">${nou ? '' : '<button class="btn" id="a-del">Șterge</button>'}<button class="btn primary" id="a-save">Salvează</button></div>`);
+    const q = (x) => sh.querySelector(x);
+    const upd = () => {
+      const m = q('#a-tip').value === 'mandat';
+      q('#a-norma-f').hidden = m; q('#a-pers-f').hidden = m; q('#a-chk').hidden = m;
+      const c = S.calcul({ tip: q('#a-tip').value, brut: Number(q('#a-brut').value) || 0, persoane: Number(q('#a-pers').value) || 0, sub26: q('#a-sub26').checked, functieBaza: q('#a-baza').checked }, azi, s);
+      q('#a-info').textContent = `Net: ${lei(c.net)} lei · cost total firmă: ${lei(c.cost)} lei pe lună.${m ? ' Contractul de mandat se înregistrează la ANAF prin D112, nu în REVISAL.' : ' Contractul de muncă se înregistrează în REVISAL cel târziu cu o zi înainte de începerea activității.'}`;
+    };
+    sh.addEventListener('input', upd); sh.addEventListener('change', upd); upd();
+    q('#a-save').onclick = async () => {
+      const x = { ...a, nume: q('#a-nume').value.trim(), tip: q('#a-tip').value, deLa: q('#a-dela').value, panaLa: q('#a-pana').value || '', brut: Number(q('#a-brut').value) || 0,
+        norma: Number(q('#a-norma').value) || 8, persoane: Number(q('#a-pers').value) || 0, sub26: q('#a-sub26').checked, functieBaza: q('#a-baza').checked };
+      if (!x.nume || !x.deLa || !x.brut) { toast('Completează numele, data începerii și salariul.'); return; }
+      const nl = nou ? [...lst, x] : lst.map((y) => (y.id === x.id ? x : y));
+      await S.salveaza(nl, [x.deLa, a.deLa].filter(Boolean).sort()[0]);
+      if (!s.areSalariati) { const { saveSetari } = await import('./engine.js'); await saveSetari({ ...s, areSalariati: true }); }
+      closeSheet(); toast('Salvat. Statul de plată și notele se actualizează singure.');
+      const auto = await import('./auto.js'); await auto.inchideriAutomate(); await ctx.reload();
+    };
+    if (q('#a-del')) q('#a-del').onclick = async () => {
+      if (!(await confirma(`Ștergi ${a.nume}? Dacă a plecat din firmă, completează mai bine data încetării, ca lunile lucrate să rămână în contabilitate.`, 'Șterge'))) return;
+      await S.salveaza(lst.filter((y) => y.id !== a.id), a.deLa);
+      const auto = await import('./auto.js'); await auto.inchideriAutomate(); await ctx.reload();
+    };
+  };
+  $('#s-add', el).onclick = () => editeaza(null);
+  $$('[data-ang]', el).forEach((li) => (li.onclick = () => editeaza(lst.find((a) => a.id === li.dataset.ang))));
 }

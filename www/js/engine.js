@@ -41,6 +41,8 @@ export async function getSetari() {
   return { ...SETARI_IMPLICITE, ...(s || {}), ai: { ...SETARI_IMPLICITE.ai, ...((s && s.ai) || {}) } };
 }
 export const saveSetari = (s) => db.put('settings', { ...s, id: 'firma' });
+/** Firma e plătitoare de TVA la data respectivă (se poate înregistra în cursul anului, de la data „tvaDeLa”). */
+export const tvaLa = (setari, data) => !!setari.platitorTVA && (!setari.tvaDeLa || String(data || '9999-12-31') >= setari.tvaDeLa);
 export function reguli(setari) {
   const r = structuredClone(RULES_2026);
   if (setari && setari.reguli) {
@@ -194,12 +196,13 @@ export function registruCasa(note, setari, from, to) {
 export function noteDinDocument(doc, setari) {
   const linii = [];
   const total = r2(doc.total);
-  const tva = setari.platitorTVA ? r2(doc.tva || 0) : 0;
-  const baza = setari.platitorTVA ? r2(total - tva) : total;
+  const areTVA = tvaLa(setari, doc.data);
+  const tva = areTVA ? r2(doc.tva || 0) : 0;
+  const baza = areTVA ? r2(total - tva) : total;
   const partener = doc.partener?.nume || '';
   const docTxt = `${doc.tipDocument || 'Factura'} ${doc.nr || ''}`.trim();
 
-  if (doc.tip === 'cheltuiala' && doc.taxareInversa && setari.platitorTVA) {
+  if (doc.tip === 'cheltuiala' && doc.taxareInversa && areTVA) {
     // taxare inversă (ex. servicii din UE, art. 307/331 Cod fiscal): factura vine fără TVA,
     // cumpărătorul calculează TVA-ul și îl înregistrează simultan ca deductibil și colectat
     const contCh = doc.cont || '628';
@@ -387,12 +390,17 @@ export async function inchideLuna(an, luna) {
   await add('amortizare', 'Notă amortizare', `Amortizare ${LUNI[luna - 1]} ${an}`,
     am.map(({ m, s }) => ({ d: '6811', c: CONT_AMORTIZARE[m.cont] || '2813', suma: s, expl: m.denumire })));
 
+  // 1b. Salarii: statul de plată al lunii
+  const S = await import('./salarii.js');
+  const stat = S.statDePlata(await S.lista(), an, luna, setari);
+  if (stat.rand.length) await add('salarii', 'Stat de plată', `Salarii ${LUNI[luna - 1]} ${an} (${stat.rand.length} ${stat.rand.length === 1 ? 'angajat' : 'angajați'})`, S.liniiNota(stat));
+
   let note = await toateNotele();
   const finalTrim = luna % 3 === 0;
   const finalPerTVA = setari.perioadaTVA === 'luna' || finalTrim;
 
   // 2. Regularizare TVA
-  if (setari.platitorTVA && finalPerTVA) {
+  if (tvaLa(setari, to) && finalPerTVA) {
     const p = setari.perioadaTVA === 'luna' ? { from, to } : trimInterval(an, trimDinLuna(luna));
     const b = balanta(note, setari, p.from, p.to);
     const sold = (cod) => { const r = b.rows.find((x) => x.cod === cod); return r ? r2(r.sfc - r.sfd) : 0; };

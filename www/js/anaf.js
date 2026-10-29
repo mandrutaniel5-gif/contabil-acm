@@ -7,7 +7,7 @@ import { nativeFetch, areHttpNativ, bytesToB64 } from './host.js';
 import { idToken, FIREBASE } from './auth.js';
 import { unzip } from './unzip.js';
 import { citesteFactura, curataCUI } from './ubl.js';
-import { getSetari, salveazaDocument, r2 } from './engine.js';
+import { getSetari, salveazaDocument, r2, tvaLa } from './engine.js';
 import { sugestieLocala } from './ai.js';
 import { curs } from './bnr.js';
 
@@ -175,7 +175,7 @@ export async function salveazaFactura(xmlBytes, m, set, docs) {
       data: f.data, scadenta: f.scadenta || '', nr: f.nr,
       partener: { nume: partener.nume, cui: partener.cui, adresa: partener.adresa, regCom: partener.regCom, platitorTVA: partener.platitorTVA, iban: partener.iban || f.ibanFurnizor || '' },
       descriere,
-      total: totalLei, tva: set.platitorTVA ? tvaLei : 0, tvaCota: set.platitorTVA ? cotaPrincipala : 0,
+      total: totalLei, tva: tvaLa(set, f.data) ? tvaLei : 0, tvaCota: tvaLa(set, f.data) ? cotaPrincipala : 0,
       taxareInversa: !!f.taxareInversa,
       moneda: f.moneda, totalValuta: f.moneda !== 'RON' ? f.total : null, curs: f.moneda !== 'RON' ? cursV : null,
       cont: dublura?.cont || (primita ? (sug?.cont || '628') : '704'),

@@ -21,6 +21,7 @@ export function termene(setari, deLa = new Date(), luniInainte = 4) {
       const pas = per === 'luna' ? 1 : 3;
       for (let l = pas; l <= 12; l += pas) {
         if (d.faraT4 && l === 12) continue;
+        if ((cod === 'D300' || cod === 'D394') && setari.tvaDeLa && `${y}-${String(l).padStart(2, '0')}-31` < setari.tvaDeLa) continue;
         const ny = l === 12 ? y + 1 : y, nl = l === 12 ? 0 : l; // luna următoare (index 0)
         const zi = d.zi === 'last' ? new Date(ny, nl + 1, 0).getDate() : d.zi;
         out.push({

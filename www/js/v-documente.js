@@ -1,4 +1,4 @@
-import { e, $, $$, icon, withLoad, toast, confirma, eqHTML } from './ui.js';
+import { e, $, $$, icon, withLoad, toast, confirma, alege, eqHTML } from './ui.js';
 import { lei, r2, azi, dataRo, noteDinDocument, salveazaDocument, stergeDocument, reguli, LUNI } from './engine.js';
 import { cont, toateConturile } from './conturi.js';
 import * as ai from './ai.js';
@@ -270,7 +270,14 @@ async function editor(main, ctx, id) {
     if (doc.tip === 'cheltuiala' && doc.plata === 'casa') {
       const b = ctx.soldCasa ? ctx.soldCasa() : null;
       if (b != null && b < doc.total && !existent) {
-        if (!(await confirma(`În casă sunt doar ${lei(b)} lei. Plata cash de ${lei(doc.total)} lei ar face soldul negativ. Salvezi oricum?`, 'Salvează'))) return;
+        const ultimExtras = (ctx.extrase || []).flatMap((x) => x.tranzactii.map((t) => t.data)).sort().at(-1) || '';
+        const asteaptaExtras = doc.data > ultimExtras; // retragerea de la bancomat poate fi în extrasul neimportat încă
+        const r = await alege('De unde au fost banii?', `În casa firmei sunt acum ${lei(b)} lei, iar bonul e de ${lei(doc.total)} lei. ${asteaptaExtras ? 'Dacă ai scos bani de la bancomat cu cardul firmei, retragerea apare în extrasul de cont și casa se completează când îl imporți.' : 'Dacă administratorul a plătit din banii lui, firma îi datorează suma (decont) și i-o poate da înapoi oricând.'}`,
+          asteaptaExtras
+            ? [['casa', 'Din casă — am scos bani de la bancomat (recomandat)', true], ['asociat', 'Administratorul, din banii lui'], ['banca', 'Cu cardul firmei']]
+            : [['asociat', 'Administratorul, din banii lui (recomandat)', true], ['banca', 'Cu cardul firmei'], ['casa', 'Totuși din casă']]);
+        if (!r) return;
+        doc.plata = r; v('#plata').value = r;
       }
     }
     doc.deVerificat = false;

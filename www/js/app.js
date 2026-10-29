@@ -122,7 +122,7 @@ document.addEventListener('click', (ev) => {
 });
 document.getElementById('sheet-back').onclick = closeSheet;
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeSheet(); });
-window.addEventListener('hashchange', route);
+window.addEventListener('hashchange', () => { if (document.getElementById('sheet').classList.contains('open')) closeSheet(); route(); });
 
 (async () => {
   await ctx.load();

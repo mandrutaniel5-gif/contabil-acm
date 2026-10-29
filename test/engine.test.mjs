@@ -193,6 +193,57 @@ await t('Situații financiare și reportarea în anul nou', async () => {
   eq(b26.tot.sid, b26.tot.sic, 'solduri inițiale echilibrate');
 });
 
+
+await t('Salarii 2026: salariul minim, deducere, stat de plată și notă', async () => {
+  const s = await reset({ regim: 'micro', platitorTVA: false });
+  const S = await import('../www/js/salarii.js');
+  // 4.325 lei brut (minimul din iulie 2026): 200 lei netaxabili, deducere 20% = 865 lei
+  const c = S.calcul({ tip: 'cim', brut: 4325, persoane: 0 }, '2026-09-01', s);
+  eq(c.neimpozabil, 200, 'sumă netaxabilă'); eq(c.cas, 1031, 'CAS'); eq(c.cass, 413, 'CASS'); eq(c.deducere, 865, 'deducere');
+  eq(c.impozit, 182, 'impozit'); eq(c.net, 2699, 'net'); eq(c.cam, 97, 'CAM');
+  // peste minim: deducerea scade cu 0,5 pp la 50 lei; la minim + 2.000 lei e zero
+  eq(S.deducere(4325 + 100, 4325, 0), Math.round(4325 * 0.19), 'deducere scăzută');
+  eq(S.deducere(4325 + 2000, 4325, 2), 0, 'deducere zero');
+  // mandat: fără deducere și fără CAM
+  const m = S.calcul({ tip: 'mandat', brut: 4325 }, '2026-09-01', s);
+  eq(m.cam, 0, 'mandat fără CAM'); eq(m.deducere, 0, 'mandat fără deducere');
+  // sărbători legale și luna proporțională
+  assert.equal(S.pasteOrtodox(2027), '2027-05-02');
+  assert.equal(S.zileLucratoare('2027-01-01', '2027-01-31'), 18);
+  await S.salveaza([{ id: 'a', nume: 'Popescu Andreea', tip: 'cim', deLa: '2027-01-04', brut: 4325, norma: 8 }], '2027-01-04');
+  const st = S.statDePlata(await S.lista(), 2027, 1, s);
+  assert.equal(st.rand[0].proportie, 100, 'angajată în prima zi lucrătoare: lună întreagă');
+  eq(st.deVirat, 1723, 'de virat la ANAF');
+  await E.inchideLuna(2027, 1);
+  const n = (await E.toateNotele()).find((x) => x.auto === 'salarii');
+  assert.ok(n, 'nota de salarii a fost generată');
+  eq(n.linii.filter((l) => l.d === '641').reduce((a, l) => a + l.suma, 0), 4325, '641 = 421');
+  const cm = S.conditieMicro(await S.lista(), '2027-02-01', s);
+  assert.ok(cm.ok, 'condiția micro îndeplinită');
+  assert.ok(!S.conditieMicro([], '2026-12-01', { ...s, dataInfiintare: '2026-10-27' }).ok);
+  assert.equal(S.conditieMicro([], '2026-12-01', { ...s, dataInfiintare: '2026-10-27' }).termen, '2027-01-25');
+});
+
+await t('Extras: plata la ANAF pe mai multe luni și legarea plăților deja înregistrate', async () => {
+  const s = await reset({ regim: 'micro', platitorTVA: false });
+  const X = await import('../www/js/extrase.js');
+  const note = [
+    { data: '2027-01-31', linii: [{ d: '421', c: '4315', suma: 1031 }, { d: '421', c: '4316', suma: 413 }, { d: '421', c: '444', suma: 182 }, { d: '6461', c: '436', suma: 97 }] },
+    { data: '2027-02-28', linii: [{ d: '421', c: '4315', suma: 1031 }, { d: '421', c: '4316', suma: 413 }, { d: '421', c: '444', suma: 182 }, { d: '6461', c: '436', suma: 97 }] },
+    { data: '2027-03-31', linii: [{ d: '698', c: '4418', suma: 127 }] },
+  ];
+  const ob = X.obligatiiDeschise(note, ['4315', '4316', '444', '436', '4418'], '2027-03-24');
+  assert.equal(ob.length, 8, 'două luni de contribuții deschise; impozitul micro e după data plății');
+  const p = X.propune({ data: '2027-03-24', suma: -1723, detalii: 'Plata contributii D112 cont unic ANAF', contraparte: 'TREZORERIE OPERATIVA' },
+    { documente: [], note, setari: s, solduri: {}, contBanca: '5121' });
+  eq(p.linii.reduce((a, l) => a + l.suma, 0), 1723, 'o lună de contribuții');
+  assert.ok(p.incredere >= 90 && /februarie|01\.2027|02\.2027/.test(p.motiv), p.motiv);
+  const bon = { id: 'n1', data: '2027-03-06', explicatie: 'OMV benzină', linii: [{ d: '6022', c: '5121', suma: 310.34 }] };
+  const q = X.propune({ data: '2027-03-07', suma: -310.34, detalii: 'POS OMV PETROM ORADEA', contraparte: 'OMV PETROM' },
+    { documente: [], note: [bon], setari: s, solduri: {}, contBanca: '5121' });
+  assert.equal(q.legaNota, 'n1', 'bonul plătit cu cardul nu se mai înregistrează a doua oară');
+});
+
 const F = await import('../www/js/v-formulare.js').catch(() => null);
 await t('Suma în litere', async () => {
   const { inLitere } = F || (await import('../www/js/v-formulare.js'));

@@ -87,6 +87,7 @@ export async function inchideriAutomate() {
     const now = new Date();
     const anCur = now.getFullYear(), lunaCur = now.getMonth() + 1;
     let note = await toateNotele();
+    const sal = await db.get('settings', 'salariati');
     let refacute = 0;
     for (const an of [anCur - 1, anCur]) {
       const ultimaLuna = an < anCur ? 12 : lunaCur - 1;
@@ -97,7 +98,8 @@ export async function inchideriAutomate() {
         const inch = note.find((n) => n.autoPerioada === p && n.auto === 'inchidere');
         const ultMod = manuale.reduce((m, n) => (n.modificat > m ? n.modificat : m), '');
         const mf = (await db.all('mijloace')).some((m) => m.dataPIF && m.dataPIF.slice(0, 7) < p);
-        if ((manuale.length || mf) && (!inch || ultMod > inch.modificat)) { dela = l; break; }
+        const salSchimbat = sal?.dela && sal.dela.slice(0, 7) <= p && (!inch || sal.modificat > inch.modificat);
+        if (salSchimbat || ((manuale.length || mf) && (!inch || ultMod > inch.modificat))) { dela = l; break; }
       }
       if (!dela) continue;
       for (let l = dela; l <= ultimaLuna; l++) {

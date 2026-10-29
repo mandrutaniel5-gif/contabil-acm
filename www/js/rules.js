@@ -37,7 +37,7 @@ export const KEYWORD_RULES = [
   { cont: '6022', eticheta: 'Combustibil', kw: ['benzina', 'motorina', 'diesel', 'combustibil', 'omv', 'petrom', 'rompetrol', 'mol ', 'lukoil', 'socar', 'carburant'] },
   { cont: '626', eticheta: 'Telefon și internet', kw: ['telekom', 'orange', 'vodafone', 'digi', 'rcs', 'internet', 'abonament telefon', 'telecomunic'] },
   { cont: '627', eticheta: 'Comisioane bancare', kw: ['comision', 'banca transilvania', 'bcr', 'brd', 'ing bank', 'revolut business', 'taxa administrare cont'] },
-  { cont: '628', eticheta: 'Servicii software / cloud', kw: ['google', 'firebase', 'aws', 'amazon web', 'microsoft', 'github', 'adobe', 'figma', 'anthropic', 'openai', 'hosting', 'domeniu', 'rotld', 'cloudflare', 'vercel', 'netlify', 'apple developer', 'google play', 'abonament'] },
+  { cont: '628', eticheta: 'Servicii software / cloud', kw: ['google', 'firebase', 'aws', 'amazon web', 'microsoft', 'github', 'adobe', 'figma', 'anthropic', 'openai', 'hosting', 'domeniu', 'rotld', 'cloudflare', 'vercel', 'netlify', 'apple developer', 'apple.com', 'google play', 'abonament'] },
   { cont: '6232', eticheta: 'Reclamă și publicitate', kw: ['facebook ads', 'meta platforms', 'google ads', 'publicitate', 'reclama', 'promovare', 'tiktok ads'] },
   { cont: '6231', eticheta: 'Protocol', kw: ['restaurant', 'cafenea', 'protocol', 'catering'] },
   { cont: '625', eticheta: 'Deplasări', kw: ['hotel', 'cazare', 'booking', 'airbnb', 'bilet avion', 'wizz', 'ryanair', 'tarom', 'cfr calatori', 'diurna'] },

@@ -1,7 +1,9 @@
 import { e, icon } from './ui.js';
 import { balanta, lei, LUNI, trimDinLuna, rulajeClasa, dataRo, iso } from './engine.js';
 import { d100Micro, estimareProfit, termene, zilePana } from './declaratii.js';
-import { indicatii } from './indicatii.js';
+import { indicatii, primiPasi } from './indicatii.js';
+import { lista as listaSalariati } from './salarii.js';
+import { saveSetari } from './engine.js';
 import * as auto from './auto.js';
 import { areHttpNativ } from './host.js';
 
@@ -20,6 +22,7 @@ export async function render(main, ctx) {
     imp = p.impozit; impHint = `Profit 16%, cumulat ${an}`;
   }
   const tips = await indicatii(ctx);
+  const pasi = primiPasi({ ...ctx, salariati: await listaSalariati() }, areHttpNativ());
   const tm = termene(setari, now, 3).slice(0, 5);
   const recente = [...documente].sort((a, b) => (b.data || '').localeCompare(a.data || '')).slice(0, 6);
 
@@ -41,10 +44,16 @@ export async function render(main, ctx) {
     </div>
   </section>
 
+  ${pasi ? `<section class="panel" style="margin-top:16px" id="primi-pasi">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Primii pași · ${pasi.filter((x) => x.ok).length} din ${pasi.length}</h2><button class="btn sm ghost" id="pp-ascunde">Ascunde</button></div>
+    <p class="muted small">Fă-i o singură dată, în ordinea de mai jos. Apoi aplicația lucrează aproape singură: tu adaugi bonurile și extrasul de cont o dată pe lună.</p>
+    <ul class="list">${pasi.map((x, i) => `<li class="${x.ok ? '' : 'clickable'}" ${x.ok ? '' : `data-go="${x.act}"`}><span class="badge ${x.ok ? 'ok' : ''}" style="min-width:28px;justify-content:center">${x.ok ? '✓' : i + 1}</span><div class="grow"><div class="t" style="${x.ok ? 'text-decoration:line-through;opacity:.6' : ''}">${e(x.text)}</div></div></li>`).join('')}</ul>
+  </section>` : ''}
+
   <div class="split" style="margin-top:16px">
     <section class="panel">
       <h2>Ce ai de făcut</h2>
-      ${tips.map((x) => `<div class="tip ${x.grav === 'info' ? '' : x.grav}"><span class="dot"></span><div class="grow"><p>${e(x.text)}</p>${x.act ? `<div class="act"><button class="btn sm ghost" data-go="${e(x.act[1])}">${e(x.act[0])}</button></div>` : ''}</div></div>`).join('')}
+      ${tips.map((x) => `<div class="tip ${x.grav === 'info' ? '' : x.grav}"><span class="dot"></span><div class="grow"><p>${e(x.text)}</p>${x.act ? `<div class="act"><button class="btn sm ghost" ${x.ai ? `data-ai="${e(x.ai)}"` : `data-go="${e(x.act[1])}"`}>${e(x.act[0])}</button></div>` : ''}</div></div>`).join('')}
       <div class="row" style="margin-top:8px"><button class="btn sm" data-ai="Verifică-mi te rog contabilitatea pe luna aceasta și spune-mi dacă am uitat ceva sau dacă e ceva greșit.">${icon('spark')}Cere asistentului o verificare completă</button></div>
     </section>
     <div>
@@ -69,4 +78,6 @@ export async function render(main, ctx) {
       </section>
     </div>
   </div>`;
+  const pp = main.querySelector('#pp-ascunde');
+  if (pp) pp.onclick = async () => { await saveSetari({ ...setari, primiPasiAscuns: true }); await ctx.reload(); };
 }

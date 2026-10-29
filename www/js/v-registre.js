@@ -10,7 +10,12 @@ import { vSituatii, vInventar, vJurnalTVA, vInchidereAn } from './situatii.js';
 
 const TABS = [['jurnal', 'Registrul jurnal'], ['balanta', 'Balanța'], ['fisa', 'Fișa contului'], ['casa', 'Registrul de casă'], ['tva', 'Jurnale TVA'], ['mijloace', 'Mijloace fixe'], ['inchidere', 'Închiderea lunii'], ['inventar', 'Registrul-inventar'], ['situatii', 'Situații financiare'], ['an', 'Închiderea anului']];
 
-const st = { tipPer: 'luna', an: new Date().getFullYear(), luna: new Date().getMonth() + 1, t: Math.ceil((new Date().getMonth() + 1) / 3), cont: '5121' };
+const st = { tipPer: 'luna', cont: '5121' };
+function perioadaImplicita() {
+  const n = new Date(); const zi = n.toISOString().slice(0, 10);
+  if (st.zi === zi) return;
+  Object.assign(st, { zi, an: n.getFullYear(), luna: n.getMonth() + 1, t: Math.ceil((n.getMonth() + 1) / 3), anAles: false });
+}
 
 function interval() {
   if (st.tipPer === 'an') return { from: `${st.an}-01-01`, to: `${st.an}-12-31`, label: `anul ${st.an}` };
@@ -28,6 +33,7 @@ function selPerioada() {
 }
 
 export async function render(main, ctx, params) {
+  perioadaImplicita();
   const tab = params[0] || 'jurnal';
   if (tab === 'mijloace' && params[1] === 'nou') return mijlocNou(main, ctx, params[2]);
   main.innerHTML = `

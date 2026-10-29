@@ -19,7 +19,7 @@ export async function render(main, ctx, params) {
   <div class="seg" style="margin-bottom:16px">${SECT.map(([k, l]) => `<button data-go="#setari/${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>
   <section class="panel" style="max-width:820px" id="sv"></section>`;
   const sv = $('#sv', main);
-  await ({ firma, fiscal, solduri, sync: vSync, spv: vSpv, auto: vAuto, date, aspect }[sec] || firma)(sv, ctx);
+  await ({ firma, fiscal, solduri, sync: vSync, spv: vSpv, auto: vAuto, date, aspect }[sec] || firma)(sv, ctx, params.slice(1));
 }
 
 async function salveaza(ctx, patch, btn) {
@@ -42,6 +42,9 @@ function firma(el, ctx) {
       <label class="field"><span>IBAN</span><input type="text" id="iban" value="${e(s.iban)}"></label>
       <label class="field"><span>Banca</span><input type="text" id="banca" value="${e(s.banca)}"></label>
     </div>
+    <div class="fields-2">
+      <label class="field"><span>Data înființării firmei</span><input type="date" id="dataInfiintare" value="${e(s.dataInfiintare || '')}"><small>Din certificatul de înregistrare. O firmă micro nouă are 90 de zile să angajeze un salariat.</small></label>
+    </div>
     <label class="field"><span>Numele administratorului</span><input type="text" id="administrator" value="${e(s.administrator || '')}" placeholder="ex. Mândruț Aniel-Ionatan"><small>Apare pe formulare și ajută la recunoașterea în extras a banilor puși sau scoși de administrator.</small></label>
     <div class="row end"><button class="btn primary" id="save">Salvează</button></div>`;
   const v = (x) => $(x, el);
@@ -52,17 +55,20 @@ function firma(el, ctx) {
       toast(r.platitorTVA ? 'Date preluate. ANAF arată firma ca plătitoare de TVA — verifică în Regim fiscal.' : 'Date preluate de la ANAF.');
     } catch (err) { toast(err.message); }
   };
-  v('#save').onclick = (ev) => salveaza(ctx, Object.fromEntries(['nume', 'cui', 'regCom', 'localitate', 'adresa', 'iban', 'banca', 'administrator'].map((k) => [k, v('#' + k).value.trim()])), ev.currentTarget);
+  v('#save').onclick = (ev) => salveaza(ctx, Object.fromEntries(['nume', 'cui', 'regCom', 'localitate', 'adresa', 'iban', 'banca', 'administrator', 'dataInfiintare'].map((k) => [k, v('#' + k).value.trim()])), ev.currentTarget);
 }
 
-function fiscal(el, ctx) {
+function fiscal(el, ctx, p = []) {
   const s = ctx.setari; const R = reguli(s);
+  const trecere = p[0] === 'tva' && !s.platitorTVA ? (p[1] || new Date().toISOString().slice(0, 10)) : null;
   el.innerHTML = `<h2>Regim fiscal</h2>
     <div class="tip"><span class="dot"></span><div class="grow"><p><b>Nu știi ce regim are firma?</b> Un SRL nou cu cifra de afaceri sub ${lei(R.micro.plafonEUR)} euro și care îndeplinește condițiile din Codul fiscal este de regulă microîntreprindere (impozit ${Math.round(R.micro.cota * 100)}% din venituri). Regimul exact apare în certificatul de înregistrare fiscală sau în Vectorul fiscal din SPV.</p>
       <div class="act"><button class="btn sm ghost" data-ai="Cum aflu dacă firma mea ACM CODE SRL este microîntreprindere sau plătitoare de impozit pe profit, și ce condiții trebuie să îndeplinesc în 2026 pentru regimul micro?">Întreabă asistentul</button></div></div></div>
     <label class="field"><span>Impozitare</span><select id="regim"><option value="micro" ${s.regim === 'micro' ? 'selected' : ''}>Microîntreprindere — ${Math.round(R.micro.cota * 100)}% din venituri</option><option value="profit" ${s.regim === 'profit' ? 'selected' : ''}>Impozit pe profit — ${Math.round(R.profit.cota * 100)}% din profit</option></select></label>
-    <label class="check"><input type="checkbox" id="platitorTVA" ${s.platitorTVA ? 'checked' : ''}><span><b>Firma este plătitoare de TVA</b><br><span class="muted small">Are cod de TVA (CUI cu prefix RO în certificat). Dacă nu, facturile se emit fără TVA, iar TVA-ul de pe achiziții intră în cheltuială.</span></span></label>
-    <div id="tva-opts" ${s.platitorTVA ? '' : 'hidden'}>
+    ${trecere ? `<div class="tip warn"><span class="dot"></span><div class="grow"><p><b>Trecerea la TVA.</b> Plafonul de scutire a fost depășit pe ${trecere.split('-').reverse().join('.')}. Din ziua depășirii (începând cu factura care a depășit plafonul) facturile se emit cu TVA, iar cererea de înregistrare (formularul 098) se depune cel târziu în acea zi. Completează mai jos data de la care ești plătitor de TVA (din certificatul primit de la ANAF) și salvează. Facturile de dinainte rămân fără TVA.</p></div></div>` : ''}
+    <label class="check"><input type="checkbox" id="platitorTVA" ${s.platitorTVA || trecere ? 'checked' : ''}><span><b>Firma este plătitoare de TVA</b><br><span class="muted small">Are cod de TVA (CUI cu prefix RO în certificat). Dacă nu, facturile se emit fără TVA, iar TVA-ul de pe achiziții intră în cheltuială.</span></span></label>
+    <div id="tva-opts" ${s.platitorTVA || trecere ? '' : 'hidden'}>
+      <label class="field" style="max-width:260px"><span>Plătitor de TVA de la data</span><input type="date" id="tvaDeLa" value="${e(trecere || s.tvaDeLa || '')}"><small>Gol dacă firma a fost plătitoare de TVA dintotdeauna.</small></label>
       <label class="field"><span>Perioada fiscală TVA</span><select id="perioadaTVA"><option value="trimestru" ${s.perioadaTVA === 'trimestru' ? 'selected' : ''}>Trimestrială</option><option value="luna" ${s.perioadaTVA === 'luna' ? 'selected' : ''}>Lunară</option></select></label>
       <label class="check"><input type="checkbox" id="tvaLaIncasare" ${s.tvaLaIncasare ? 'checked' : ''}><span><b>TVA la încasare</b><br><span class="muted small">TVA-ul din facturile emise se datorează abia când clientul plătește.</span></span></label>
     </div>
@@ -85,10 +91,11 @@ function fiscal(el, ctx) {
     <div class="row end"><button class="btn primary" id="save">Salvează</button></div>`;
   const v = (x) => $(x, el);
   v('#platitorTVA').onchange = () => { v('#tva-opts').hidden = !v('#platitorTVA').checked; };
-  v('#save').onclick = (ev) => {
+  v('#save').onclick = async (ev) => {
     const n = (id) => Number(v(id).value);
-    salveaza(ctx, {
-      regim: v('#regim').value, platitorTVA: v('#platitorTVA').checked, perioadaTVA: v('#perioadaTVA').value,
+    const inainte = `${s.platitorTVA}|${s.tvaDeLa || ''}`;
+    await salveaza(ctx, {
+      regim: v('#regim').value, platitorTVA: v('#platitorTVA').checked, tvaDeLa: v('#platitorTVA').checked ? v('#tvaDeLa').value : '', perioadaTVA: v('#perioadaTVA').value, regimConfirmat: true,
       tvaLaIncasare: v('#tvaLaIncasare').checked, areSalariati: v('#areSalariati').checked, cursEUR: n('#cursEUR'), cursSetat: true,
       reguli: {
         micro: { cota: n('#r-micro') / 100, plafonEUR: n('#r-plafon'), excluseBaza: v('#r-excl').value.split(',').map((x) => x.trim()).filter(Boolean) },
@@ -97,6 +104,16 @@ function fiscal(el, ctx) {
         mijlocFixMin: n('#r-mf') || RULES_2026.mijlocFixMin,
       },
     }, ev.currentTarget);
+    const ns = ctx.setari;
+    if (`${ns.platitorTVA}|${ns.tvaDeLa || ''}` !== inainte) {
+      // notele documentelor afectate se refac cu noul regim de TVA
+      const { salveazaDocument } = await import('./engine.js');
+      const de = !s.platitorTVA && ns.platitorTVA ? ns.tvaDeLa || '' : [s.tvaDeLa || '', ns.tvaDeLa || ''].sort()[0];
+      const docs = ctx.documente.filter((d) => (d.data || '') >= de);
+      for (const d of docs) await salveazaDocument(d, ns);
+      if (docs.length) { await ctx.reload(); toast(`Regimul de TVA a fost aplicat la ${docs.length} ${docs.length === 1 ? 'document' : 'documente'} din ${de ? 'perioada de la ' + de.split('-').reverse().join('.') : 'toată perioada'}.`); }
+      location.hash = '#declaratii';
+    }
   };
 }
 

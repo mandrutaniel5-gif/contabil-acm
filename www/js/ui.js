@@ -78,6 +78,17 @@ export function confirma(text, ok = 'Confirmă') {
   });
 }
 
+/** Întrebare cu mai multe răspunsuri: optiuni = [[valoare, eticheta, principal?]]; rezolvă cu valoarea sau null. */
+export function alege(titlu, text, optiuni) {
+  return new Promise((res) => {
+    const s = openSheet(titlu, `<p>${e(text)}</p>`,
+      `<div style="display:flex;flex-direction:column;gap:8px">${optiuni.map(([v, l, p], i) => `<button class="btn ${p ? 'primary' : ''}" data-opt="${i}" style="width:100%;justify-content:center">${e(l)}</button>`).join('')}<button class="btn ghost" data-no style="width:100%;justify-content:center">Renunță</button></div>`,
+      { onClose: () => res(null) });
+    s.querySelector('[data-no]').onclick = () => closeSheet();
+    s.querySelectorAll('[data-opt]').forEach((b) => (b.onclick = () => { onCloseCb = null; closeSheet(); res(optiuni[Number(b.dataset.opt)][0]); }));
+  });
+}
+
 export function descarca(nume, continut, tip = 'application/octet-stream') {
   const url = URL.createObjectURL(new Blob([continut], { type: tip }));
   const a = document.createElement('a'); a.href = url; a.download = nume; document.body.appendChild(a); a.click();

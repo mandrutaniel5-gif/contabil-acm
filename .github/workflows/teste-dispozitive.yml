@@ -1,0 +1,89 @@
+# Teste pe platformele reale: iPhone (simulator iOS, aplicația instalată) și Windows (aplicația Electron).
+# Rulează doar manual. Rezultatele (capturi, consolă, rezultate.json) se publică pe ramurile
+# „rezultate-ios” și „rezultate-windows”, ca să poată fi citite cu git.
+name: Teste pe dispozitive
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforme:
+        description: 'toate, ios sau windows'
+        default: toate
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    if: inputs.platforme == 'toate' || inputs.platforme == 'ios'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - name: Cel mai nou Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1); echo "Folosesc $X"; sudo xcode-select -s "$X"
+      - run: npm ci
+      - name: Testul încorporat (doar în această compilare)
+        run: |
+          cp test/autotest.js www/autotest.js
+          sed -i '' 's#</body>#  <script type="module" src="autotest.js"></script>\n</body>#' www/index.html
+      - run: npx cap add ios && npx cap sync ios
+      - name: Compilare pentru simulator
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath sim-build CODE_SIGNING_ALLOWED=NO build | tail -5
+      - name: idb (atingeri reale pe ecran)
+        continue-on-error: true
+        run: |
+          brew tap facebook/fb && brew install idb-companion
+          python3 -m pip install --break-system-packages fb-idb || pipx install fb-idb
+          which idb
+      - name: Simulator iPhone și test
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; c=[x for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone')]; print(sorted(c, key=lambda x: x['name'])[-1]['udid'])")
+          echo "Simulator: $UDID"; xcrun simctl list devices | grep "$UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          (idb_companion --udid "$UDID" > /tmp/idb.log 2>&1 &) || true
+          sleep 5; idb connect "$UDID" 2>/dev/null || true
+          xcrun simctl install "$UDID" sim-build/Build/Products/Debug-iphonesimulator/App.app
+          python3 test/ios_runner.py "$UDID" rezultate-ios 2>&1 | tee rezultate-ios/sumar.txt || true
+          xcrun simctl list devices | grep "$UDID" > rezultate-ios/dispozitiv.txt
+      - name: Publică rezultatele
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp -r rezultate-ios/* /tmp/out/ 2>/dev/null || true
+          echo "run ${GITHUB_RUN_ID} ${GITHUB_SHA::7}" > /tmp/out/run.txt
+          cd /tmp/out && git init -q -b rezultate-ios && git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git add -A && git commit -qm "iOS ${GITHUB_SHA::7}" && git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" rezultate-ios
+
+  windows:
+    if: inputs.platforme == 'toate' || inputs.platforme == 'windows'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm i --no-save playwright@1.64.1
+      - name: Testul încorporat
+        shell: bash
+        run: |
+          cp test/autotest.js www/autotest.js
+          sed -i 's#</body>#  <script type="module" src="autotest.js"></script>\n</body>#' www/index.html
+      - name: Aplicația Electron pe Windows
+        shell: bash
+        run: node test/electron_runner.mjs rezultate-windows 2>&1 | tee rezultate-windows/sumar.txt || true
+      - name: Publică rezultatele
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p /tmp/out && cp -r rezultate-windows/* /tmp/out/ 2>/dev/null || true
+          echo "run ${GITHUB_RUN_ID} ${GITHUB_SHA::7}" > /tmp/out/run.txt
+          cd /tmp/out && git init -q -b rezultate-windows && git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git add -A && git commit -qm "Windows ${GITHUB_SHA::7}" && git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" rezultate-windows

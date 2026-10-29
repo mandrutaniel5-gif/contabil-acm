@@ -38,7 +38,7 @@ async function urmatorul(serie) {
 }
 
 // ---------------------------------------------------------------- tipărire
-function tipareste(html) {
+export function tipareste(html) {
   let p = document.getElementById('print-area');
   if (!p) { p = document.createElement('div'); p.id = 'print-area'; document.body.appendChild(p); }
   p.innerHTML = html;
@@ -47,7 +47,7 @@ function tipareste(html) {
   window.addEventListener('afterprint', gata);
   setTimeout(() => window.print(), 50);
 }
-const antetFirma = (s) => `<div class="pf-firma"><b>${e(s.nume)}</b><br>CUI ${e(s.cui || '—')} · ${e(s.regCom || '')}<br>${e(s.adresa || '')}</div>`;
+export const antetFirma = (s) => `<div class="pf-firma"><b>${e(s.nume)}</b><br>CUI ${e(s.cui || '—')} · ${e(s.regCom || '')}<br>${e(s.adresa || '')}</div>`;
 
 const FORMULARE = [
   { id: 'chitanta', titlu: 'Chitanță', ajutor: 'Încasezi cash de la un client. Se înregistrează în casă și, dacă alegi factura, o marchează încasată.' },

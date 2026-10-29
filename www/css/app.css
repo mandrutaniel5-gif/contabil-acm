@@ -47,13 +47,20 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+/* nimic nu are voie să împingă lățimea paginii (altfel iOS micșorează tot ecranul) */
+input, select, textarea, button, img, svg, video { max-width: 100%; }
+input, select, textarea { min-width: 0; }
+.row > *, .list li > * { min-width: 0; }
+.t, .m, p, h1, h2, h3, td, .tip, .badge, label { overflow-wrap: anywhere; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--font);
   font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   font-feature-settings: "tnum" 1; overflow-x: hidden;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
+/* pe telefon câmpurile au 16px: sub această mărime iOS mărește pagina la fiecare atingere */
+@media (pointer: coarse), (max-width: 760px) { input, select, textarea { font-size: 16px !important; } }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .num, td.n, .amount { font-variant-numeric: tabular-nums; }
