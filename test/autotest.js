@@ -61,6 +61,10 @@ export async function ruleaza() {
     document.activeElement?.blur(); await pauza(900);
     document.querySelector('[data-close]')?.click(); await pauza(400);
   }
+  // 2a. pagina lungă se derulează (fereastra, ca bara de stare și „tap sus” să meargă pe iPhone)
+  await mergi('documente/nou'); window.scrollTo(0, 600); await pauza(300);
+  ok('pagina se derulează', window.scrollY > 100, JSON.stringify({ y: window.scrollY, h: document.documentElement.scrollHeight }));
+  window.scrollTo(0, 0);
   // 2b. foaia de salariat (dialog) pe ecran mic: câmpurile se văd și nu măresc pagina
   await mergi('declaratii/salarii');
   document.querySelector('#s-add')?.click(); await pauza(700);

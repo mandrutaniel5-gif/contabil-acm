@@ -8,3 +8,7 @@ $B -c "Set :CFBundleDevelopmentRegion ro" $P 2>/dev/null || $B -c "Add :CFBundle
 $B -c "Delete :CFBundleLocalizations" $P 2>/dev/null; $B -c "Add :CFBundleLocalizations array" $P; $B -c "Add :CFBundleLocalizations:0 string ro" $P
 $B -c "Add :ITSAppUsesNonExemptEncryption bool false" $P 2>/dev/null || true
 echo "Info.plist actualizat"
+VER=$(node -p "require('./package.json').version")
+$B -c "Set :CFBundleShortVersionString $VER" $P
+$B -c "Set :CFBundleVersion $(echo $VER | awk -F. '{print $1*10000+$2*100+$3}')" $P
+echo "Versiune iOS: $VER"

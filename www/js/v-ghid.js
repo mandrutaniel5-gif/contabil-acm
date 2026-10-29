@@ -4,6 +4,10 @@ import { e, icon } from './ui.js';
 const AUTOMAT = [
   ['Facturile din SPV', 'Cu firma conectată la SPV, facturile primite de la furnizori și cele emise (din ACM Docs sau din alt program) intră singure în Documente, cu PDF-ul și XML-ul ANAF. Contul se propune automat; cele marcate „de verificat” cer doar o privire.'],
   ['Potrivirea extraselor', 'Când încarci extrasul, plățile și încasările se potrivesc cu facturile după sumă, nume, CUI și numărul facturii. Cele sigure se înregistrează singure, iar facturile se marchează plătite.'],
+  ['Salariile', 'Adaugi o dată salariații (și administratorul, dacă are contract de mandat). Statul de plată, nota lunară de salarii și contribuțiile se calculează singure, cu salariul minim, suma netaxabilă și deducerea personală; plata salariului și plata la ANAF se recunosc în extras.'],
+  ['Plățile deja înregistrate', 'Dacă ai trecut un bon plătit cu cardul sau o operațiune înainte să încarci extrasul, plata din extras doar se leagă de ea, nu se mai înregistrează a doua oară. Abonamentele lunare (Google, GitHub…) se învață după prima confirmare.'],
+  ['Plata la ANAF', 'O singură plată în contul unic poate stinge mai multe datorii (CAS, CASS, impozit pe salarii, CAM, impozit micro, dividende, TVA). Aplicația găsește singură combinația care dă exact suma plătită.'],
+  ['TVA-ul', 'Aplicația te avertizează din timp când te apropii de plafonul de scutire (395.000 lei) și îți spune ziua depășirii. Cu un buton treci la TVA de la acea zi, iar documentele de după se refac singure. Serviciile din străinătate primesc automat taxare inversă.'],
   ['Notele contabile', 'Fiecare document, plată sau formular își face singur nota contabilă. Nu e nevoie să știi conturile.'],
   ['Închiderea lunilor', 'Amortizarea, regularizarea TVA, impozitul trimestrial și închiderea conturilor de venituri și cheltuieli se refac singure când apare ceva nou într-o lună trecută.'],
   ['Anul nou', 'La 1 ianuarie, soldurile se preiau automat, iar profitul sau pierderea trece din 121 în 1171.'],
@@ -19,7 +23,7 @@ const ECRANE = [
   ['swap', 'Operațiuni', 'Ce nu vine pe factură: depuneri și ridicări de numerar, bani puși sau scoși de administrator, capital social, dividende, plata taxelor, sume neclare. Plus nota contabilă manuală.'],
   ['book', 'Parteneri', 'Fiecare client și furnizor, cu ce are de plătit sau de încasat, facturile restante și fișa partenerului.'],
   ['book', 'Registre', 'Registrul jurnal, balanța de verificare, fișa contului, registrul de casă, mijloacele fixe, jurnalele de TVA, registrul-inventar, situațiile financiare și închiderea anului.'],
-  ['file', 'Declarații', 'Calendarul termenelor și sumele calculate pentru D100 (impozit micro), D300 (TVA), impozitul pe profit, D112 (salarii) și fișierul SAF-T (D406).'],
+  ['file', 'Declarații', 'Calendarul termenelor și sumele calculate pentru D100 (impozit micro), D300 (TVA), D301 (servicii din străinătate), impozitul pe profit și pe dividende, salariații cu statul de plată și D112, și fișierul SAF-T (D406).'],
   ['print', 'Formulare', 'Chitanță, dispoziție de plată/încasare, decont, ordin de deplasare, proces-verbal de punere în funcțiune, hotărârea asociatului. Se tipăresc și se înregistrează singure.'],
   ['spark', 'Asistent', 'Întrebi orice, în cuvinte simple. Vede soldurile și documentele firmei, așa că răspunde concret și îți spune exact ce să apeși.'],
 ];
