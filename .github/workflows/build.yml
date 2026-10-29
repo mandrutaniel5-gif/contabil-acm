@@ -1,15 +1,19 @@
 # Build ACM Contabil pentru Windows, Android și iOS.
-# Rulează la fiecare push pe main sau manual din tab-ul Actions → "Build" → Run workflow.
+# Rulează doar manual: tab-ul Actions → "Build" → Run workflow, cu platforma dorită.
 # Fișierele rezultate apar la finalul rulării, la secțiunea Artifacts.
 name: Build
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      platforme:
+        description: 'Ce construiesc: toate, windows, android sau ios'
+        default: ios
+        required: true
 
 jobs:
   windows:
+    if: inputs.platforme == 'toate' || inputs.platforme == 'windows'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,6 +27,7 @@ jobs:
           path: dist/*.exe
 
   android:
+    if: inputs.platforme == 'toate' || inputs.platforme == 'android'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -60,6 +65,7 @@ jobs:
           path: ACM-Contabil-*.apk
 
   ios:
+    if: inputs.platforme == 'toate' || inputs.platforme == 'ios'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
