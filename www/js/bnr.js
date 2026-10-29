@@ -17,10 +17,21 @@ function parse(xml) {
   return out;
 }
 
-async function descarca(url) {
-  const r = await nativeFetch(url);
-  if (!r.ok) throw new Error('BNR nu a răspuns (' + r.status + ')');
-  return parse(r.text());
+export const ultimaEroare = { text: '' };
+/** Descarcă și citește un fișier XML al BNR; încearcă pe rând adresele date (site-ul BNR are mai multe). */
+async function descarca(...urls) {
+  let err;
+  for (const url of urls) {
+    try {
+      const r = await nativeFetch(url, { headers: { Accept: 'application/xml,text/xml,*/*' } });
+      if (!r.ok) throw new Error(`BNR nu a răspuns (${r.status}) la ${url}`);
+      const o = parse(r.text());
+      if (Object.keys(o).length) return o;
+      throw new Error(`Răspuns fără cursuri de la ${url}: ${r.text().slice(0, 80)}`);
+    } catch (e) { err = e; }
+  }
+  ultimaEroare.text = err?.message || '';
+  throw err;
 }
 
 /** Actualizează cursurile anului curent (și, la nevoie, ale anului trecut). Rulează o dată pe zi. */
@@ -30,11 +41,11 @@ export async function actualizeaza({ fortat = false } = {}) {
   const azi = new Date().toISOString().slice(0, 10);
   if (!fortat && st.zi === azi) return st;
   const an = new Date().getFullYear();
-  const anCur = await descarca(`https://www.bnr.ro/files/xml/years/nbrfxrates${an}.xml`).catch(() => ({}));
-  const ultim = await descarca('https://www.bnr.ro/nbrfxrates.xml').catch(() => ({}));
+  const anCur = await descarca(`https://www.bnr.ro/files/xml/years/nbrfxrates${an}.xml`, `https://bnr.ro/files/xml/years/nbrfxrates${an}.xml`).catch(() => ({}));
+  const ultim = await descarca('https://www.bnr.ro/nbrfxrates.xml', 'https://bnr.ro/nbrfxrates.xml', 'https://www.bnr.ro/nbrfxrates10days.xml').catch(() => ({}));
   await db.put('meta', { id: `bnr:${an}`, cursuri: { ...((await db.get('meta', `bnr:${an}`))?.cursuri || {}), ...anCur, ...ultim } });
   if (!(await db.get('meta', `bnr:${an - 1}`))) {
-    const prec = await descarca(`https://www.bnr.ro/files/xml/years/nbrfxrates${an - 1}.xml`).catch(() => null);
+    const prec = await descarca(`https://www.bnr.ro/files/xml/years/nbrfxrates${an - 1}.xml`, `https://bnr.ro/files/xml/years/nbrfxrates${an - 1}.xml`).catch(() => null);
     if (prec) await db.put('meta', { id: `bnr:${an - 1}`, cursuri: prec });
   }
   const nou = { id: 'bnr', zi: azi };

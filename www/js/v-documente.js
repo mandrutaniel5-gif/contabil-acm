@@ -1,6 +1,7 @@
 import { e, $, $$, icon, withLoad, toast, confirma, alege, eqHTML } from './ui.js';
 import { lei, r2, azi, dataRo, noteDinDocument, salveazaDocument, stergeDocument, reguli, LUNI } from './engine.js';
 import { cont, toateConturile } from './conturi.js';
+import { furnizorStrain } from './rules.js';
 import * as ai from './ai.js';
 import { rezumatPentruAI } from './indicatii.js';
 
@@ -111,6 +112,7 @@ async function editor(main, ctx, id) {
       </div>
       <label class="field"><span>Cont contabil</span><select id="cont"><option value="">Alege…</option>${conturiOpt()}</select><small id="cont-help"></small></label>
       ${setari.platitorTVA ? `<label class="field" id="ded-wrap"><span>TVA deductibil (%)</span><input type="number" id="tvaDeductibil" min="0" max="100" value="${e(doc.tvaDeductibil ?? 100)}"><small>100% pentru majoritatea achizițiilor. 50% pentru combustibilul unei mașini folosite și personal.</small></label>` : ''}
+      <label class="check" id="ti-wrap" ${doc.tip === 'venit' ? 'hidden' : ''}><input type="checkbox" id="ti" ${doc.taxareInversa ? 'checked' : ''}><span><b>Furnizor din străinătate</b> (taxare inversă)<br><span class="muted small">Servicii de la firme din afara țării (Google, GitHub, Apple…): factura vine fără TVA românesc, iar TVA-ul se calculează aici${setari.platitorTVA ? ' (colectat și dedus în același timp)' : setari.cod317 ? ' și se plătește prin D301' : '. Firma are nevoie de cod special de TVA (art. 317)'}.</span></span></label>
       <label class="field"><span id="lbl-plata">${doc.tip === 'venit' ? 'Încasare' : 'Cum s-a plătit'}</span><select id="plata"></select></label>
       <div class="row end" style="margin-top:8px"><button class="btn" data-go="#documente">Renunță</button><button class="btn primary" id="save">Salvează documentul</button></div>
     </section>
@@ -143,6 +145,8 @@ async function editor(main, ctx, id) {
     doc.descriere = v('#descriere').value.trim(); doc.total = r2(v('#total').value);
     if (setari.platitorTVA) { doc.tvaCota = Number(v('#tvaCota').value); doc.tva = r2(v('#tva').value); doc.tvaDeductibil = Number(v('#tvaDeductibil')?.value ?? 100); }
     doc.cont = v('#cont').value; doc.plata = v('#plata').value; doc.scadenta = v('#scadenta').value;
+    doc.taxareInversa = doc.tip === 'cheltuiala' && !!v('#ti')?.checked;
+    if (doc.taxareInversa && !doc.tvaCota) doc.tvaCota = R.tva.standard;
   };
   const calcTVA = () => {
     if (!setari.platitorTVA) return;
@@ -151,6 +155,7 @@ async function editor(main, ctx, id) {
   };
   const sugereaza = () => {
     if (contManual) return;
+    if (!existent && doc.tip === 'cheltuiala' && v('#ti')) v('#ti').checked = furnizorStrain(`${v('#descriere').value} ${v('#pnume').value}`);
     const s = ai.sugestieLocala(`${v('#descriere').value} ${v('#pnume').value}`, v('#total').value);
     if (s && doc.tip === 'cheltuiala') {
       v('#cont').value = s.cont;
@@ -238,6 +243,7 @@ async function editor(main, ctx, id) {
     if (doc.tip === 'venit') { v('#cont').value = '704'; v('#tipDocument').value = 'Factura'; }
     v('#lbl-partener').textContent = doc.tip === 'venit' ? 'Client' : 'Furnizor';
     v('#lbl-plata').textContent = doc.tip === 'venit' ? 'Încasare' : 'Cum s-a plătit';
+    v('#ti-wrap').hidden = doc.tip === 'venit';
     if (v('#ded-wrap')) v('#ded-wrap').hidden = doc.tip === 'venit';
     fillPlata(); helpCont(); preview();
   }));

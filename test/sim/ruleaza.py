@@ -12,6 +12,7 @@ os.makedirs(OUT, exist_ok=True)
 TMP = tempfile.mkdtemp()
 JURNAL = []          # observații: (data, tip, text)
 ERORI = []
+STARE = {}
 def nota(data, tip, text):
     JURNAL.append((str(data), tip, text)); print(f'[{data}] {tip}: {text}', flush=True)
 
@@ -135,15 +136,18 @@ async def banca(pg, cand, luna_csv, nume):
         await li.locator('[data-alt]').click(); await pg.wait_for_timeout(500)
         s = pg.locator('#sheet')
         low = text.lower()
-        # ce ar alege un începător
-        if 'salariu' in low:
-            await s.locator('#c').select_option('641')
-        elif 'anaf' in low or 'trezorerie' in low or 'contributii' in low:
-            await s.locator('#c').select_option('635')
-        elif 'dividende' in low:
-            await s.locator('#c').select_option('4551')
-        else:
-            await s.locator('#c').select_option('6588')
+        # ce ar alege un începător: întâi o factură deschisă a aceluiași partener, apoi un cont „logic”
+        primul = low.split(' · ')[0].split()[0] if low else ''
+        fact = s.locator('[data-doc]').filter(has_text=re.compile(re.escape(primul), re.I)) if primul else None
+        if fact is not None and await fact.count():
+            nota(cand, 'banca-aleg', f'factura deschisă a lui {primul}: {(await fact.first.inner_text())[:80]}')
+            await fact.first.click(); await pg.wait_for_timeout(600); continue
+        alegere = '641' if 'salariu' in low else '635' if ('anaf' in low or 'trezorerie' in low or 'contributii' in low) else '4551' if 'dividende' in low else ('7588' if '+' in text.split(' · ')[-1] else '6588')
+        try:
+            await s.locator('#c').select_option(alegere, timeout=2000)
+        except Exception:
+            nota(cand, 'banca-aleg', f'contul {alegere} nu e în listă; aleg primul'); alegere = 'primul'
+        nota(cand, 'banca-aleg', f'cont {alegere}')
         await s.locator('#cok').click(); await pg.wait_for_timeout(600)
 
 async def plateste_impozit(pg, cand, extra):
@@ -250,6 +254,15 @@ async def luna(pg, i, y, m, L, luni, extra):
                     await mergi(pg, r); await pg.screenshot(path=OUT + f'{y}_{m:02d}_{r.replace("/", "_")}_{"d" if i % 2 else "m"}.png', full_page=False)
             # plafonul de TVA: dacă aplicația avertizează că a fost depășit, utilizatorul bifează plătitor de TVA
             await mergi(pg, 'acasa'); sf2 = await sfaturi(pg)
+            # cod special de TVA pentru serviciile din străinătate: îl cere la ANAF și îl primește până luna viitoare
+            if any('cod special de TVA' in x and 'Plătești servicii' in x for x in sf2):
+                if STARE.get('cod317_cerut'):
+                    nota(cand, 'TVA-317', 'am primit codul special de TVA; îl bifez în Regim fiscal')
+                    await mergi(pg, 'setari/fiscal'); await pg.check('#cod317'); await pg.fill('#cod317DeLa', cand.isoformat())
+                    await pg.click('#save'); await pg.wait_for_timeout(1200); nota(cand, 'TVA-317', await toast(pg))
+                else:
+                    STARE['cod317_cerut'] = True
+                    nota(cand, 'TVA-317', 'aplicația spune că am nevoie de cod special de TVA pentru abonamentele din străinătate; depun cererea la ANAF')
             if any('Ai depășit plafonul de scutire TVA' in x for x in sf2):
                 nota(cand, 'TVA', 'aplicația spune că am depășit plafonul; apăs „Trec la TVA”')
                 await pg.get_by_role('button', name='Trec la TVA').first.click(); await pg.wait_for_timeout(500)

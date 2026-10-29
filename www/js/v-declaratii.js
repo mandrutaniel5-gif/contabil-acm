@@ -18,6 +18,7 @@ export async function render(main, ctx, params) {
   const tabs = [['calendar', 'Calendar']];
   tabs.push(['impozit', s.regim === 'micro' ? 'D100 — impozit micro' : 'Impozit pe profit']);
   if (s.platitorTVA) tabs.push(['tva', 'D300 — TVA']);
+  if (s.cod317 && !s.platitorTVA) tabs.push(['d301', 'D301 — TVA servicii']);
   tabs.push(['saft', 'D406 — SAF-T']);
   tabs.push(['salarii', 'Salarii — D112']);
   const tab = params[0] || 'calendar';
@@ -27,7 +28,7 @@ export async function render(main, ctx, params) {
   <div id="dv"></div>`;
   const dv = $('#dv', main);
   const rerender = () => render(main, ctx, params);
-  await ({ calendar, impozit, tva, saft, salarii }[tab] || calendar)(dv, ctx, rerender);
+  await ({ calendar, impozit, tva, d301, saft, salarii }[tab] || calendar)(dv, ctx, rerender);
 }
 
 function selTrim(rer) {
@@ -52,6 +53,17 @@ function calendar(el, ctx) {
   </section>`;
 }
 
+// Impozitul pe dividende reținut: se declară în D100 și se plătește până pe 25 a lunii de după plată.
+function dividendeHTML(ctx, an) {
+  const per = {};
+  for (const n of ctx.note) for (const l of n.linii) if (l.c === '446' && n.data.startsWith(String(an))) per[n.data.slice(0, 7)] = r2((per[n.data.slice(0, 7)] || 0) + Number(l.suma));
+  const k = Object.keys(per).sort();
+  if (!k.length) return '';
+  return `<hr class="sep"><h3>Impozit pe dividende ${an}</h3><div class="table-wrap"><table><thead><tr><th>Luna plății</th><th class="n">Impozit reținut</th><th>Termen D100 și plată</th></tr></thead><tbody>
+    ${k.map((m) => { const [y, l] = m.split('-').map(Number); const t = l === 12 ? `25.01.${y + 1}` : `25.${String(l + 1).padStart(2, '0')}.${y}`; return `<tr><td>${LUNI[l - 1]} ${y}</td><td class="n">${lei(per[m])}</td><td>${t}</td></tr>`; }).join('')}
+    </tbody></table></div><p class="muted small">În D100 alegi obligația „Impozit pe dividende distribuite persoanelor fizice”. Până la sfârșitul lui februarie ${an + 1} se depune și declarația informativă D205 pentru dividendele plătite în ${an}.</p>`;
+}
+
 function impozit(el, ctx, rer) {
   const s = ctx.setari;
   if (s.regim === 'micro') {
@@ -74,13 +86,14 @@ function impozit(el, ctx, rer) {
       </tbody></table></div>
       <p class="muted small">Baza = venituri din clasa 7, fără veniturile excluse prin art. 53 din Codul fiscal (lista se poate ajusta în Setări). Plafonul se compară cu cifra de afaceri, la cursul de ${lei(s.cursEUR)} lei/euro din Setări.</p>
       ${pasi([
-        'Închide ultima lună a trimestrului din Registre → Închiderea lunii, ca nota de impozit (698 = 4418) să fie înregistrată.',
+        'Nota de impozit (698 = 4418) se înregistrează singură la închiderea automată a ultimei luni din trimestru.',
         'Descarcă formularul D100 de pe anaf.ro (Declarații electronice → Descărcare declarații) și deschide-l în Adobe Reader.',
         `Alege obligația „Impozit pe veniturile microîntreprinderilor”, perioada T${st.t} ${st.an}, și completează suma de ${lei(d.impozitDePlata)} lei.`,
         'Validează, semnează și depune-l în SPV sau pe e-guvernare.ro. Termenul este pe 25 a lunii de după trimestru.',
-        'Plătește suma în contul unic al ANAF, apoi înregistrează plata din Operațiuni → Plată impozit micro.',
+        'Plătește suma în contul unic al ANAF (din aplicația băncii, la „Plăți către Trezorerie”). Plata se recunoaște singură când imporți extrasul.',
       ])}
-      <div class="row" style="margin-top:14px"><button class="btn" data-go="#operatii">Înregistrează plata</button><button class="btn" data-ai="Explică-mi pas cu pas cum completez și depun D100 pentru trimestrul ${st.t} ${st.an}. Impozitul calculat este ${d.impozitDePlata} lei.">${icon('spark')}Ghidează-mă</button></div>
+      ${dividendeHTML(ctx, st.an)}
+      <div class="row" style="margin-top:14px"><button class="btn" data-go="#banca">Banca</button><button class="btn" data-ai="Explică-mi pas cu pas cum completez și depun D100 pentru trimestrul ${st.t} ${st.an}. Impozitul calculat este ${d.impozitDePlata} lei.">${icon('spark')}Ghidează-mă</button></div>
     </section>`;
   } else {
     const p = estimareProfit(ctx.note, s, st.an, st.t);
@@ -98,8 +111,9 @@ function impozit(el, ctx, rer) {
       ${pasi([
         'Plățile anticipate trimestriale se declară în D100, până pe 25 a lunii de după trimestrele 1–3.',
         'Declarația anuală D101 se depune până pe 25 iunie a anului următor.',
-        'După plată, înregistrează-o din Operațiuni → Plată impozit pe profit.',
+        'Plata în contul unic al ANAF se recunoaște singură când imporți extrasul de cont.',
       ])}
+      ${dividendeHTML(ctx, st.an)}
       <div class="row" style="margin-top:14px"><button class="btn" data-ai="Explică-mi cum se calculează impozitul pe profit pentru firma mea și ce cheltuieli nedeductibile ar trebui să verific.">${icon('spark')}Ghidează-mă</button></div>
     </section>`;
   }
@@ -110,7 +124,7 @@ function tva(el, ctx, rer) {
   const lunar = s.perioadaTVA === 'luna';
   const per = lunar ? st.luna : `T${st.t}`;
   const d = d300(ctx.note, s, st.an, per);
-  const rand = (k, o) => o[k] ? `<tr><td>Cota ${k}%</td><td class="n">${lei(o[k].baza)}</td><td class="n">${lei(o[k].tva)}</td></tr>` : '';
+  const rand = (k, o) => o[k] ? `<tr><td>${k === 'ti' ? 'Taxare inversă (servicii din străinătate)' : `Cota ${k}%`}</td><td class="n">${lei(o[k].baza)}</td><td class="n">${lei(o[k].tva)}</td></tr>` : '';
   setTimeout(() => {
     const l = document.getElementById('d-luna');
     if (l) l.onchange = (ev) => { st.luna = Number(ev.target.value); rer(); };
@@ -119,19 +133,35 @@ function tva(el, ctx, rer) {
     <div class="row" style="justify-content:space-between"><h2 style="margin:0">D300 — decont de TVA</h2>
       ${lunar ? `<div class="row"><select id="d-luna" style="width:auto">${LUNI.map((l, i) => `<option value="${i + 1}" ${st.luna === i + 1 ? 'selected' : ''}>${l}</option>`).join('')}</select><select id="d-an" style="width:auto">${[st.an - 1, st.an].map((y) => `<option ${y === st.an ? 'selected' : ''}>${y}</option>`).join('')}</select></div>` : selTrim(rer)}</div>
     <h3 style="margin-top:18px">TVA colectată — din facturile emise</h3>
-    <div class="table-wrap"><table><thead><tr><th>Cotă</th><th class="n">Bază</th><th class="n">TVA</th></tr></thead><tbody>${rand('21', d.colectata)}${rand('11', d.colectata)}<tr class="total"><td>Total</td><td></td><td class="n">${lei(d.totalColectata)}</td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Cotă</th><th class="n">Bază</th><th class="n">TVA</th></tr></thead><tbody>${rand('21', d.colectata)}${rand('11', d.colectata)}${rand('ti', d.colectata)}<tr class="total"><td>Total</td><td></td><td class="n">${lei(d.totalColectata)}</td></tr></tbody></table></div>
     <h3 style="margin-top:18px">TVA deductibilă — din facturile primite</h3>
-    <div class="table-wrap"><table><thead><tr><th>Cotă</th><th class="n">Bază</th><th class="n">TVA</th></tr></thead><tbody>${rand('21', d.deductibila)}${rand('11', d.deductibila)}<tr class="total"><td>Total</td><td></td><td class="n">${lei(d.totalDeductibila)}</td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Cotă</th><th class="n">Bază</th><th class="n">TVA</th></tr></thead><tbody>${rand('21', d.deductibila)}${rand('11', d.deductibila)}${rand('ti', d.deductibila)}<tr class="total"><td>Total</td><td></td><td class="n">${lei(d.totalDeductibila)}</td></tr></tbody></table></div>
     <div class="figures" style="margin-top:18px"><div class="figure"><div class="label">TVA de plată</div><div class="value num">${lei(d.dePlata)}<small>lei</small></div></div><div class="figure"><div class="label">TVA de recuperat</div><div class="value num">${lei(d.deRecuperat)}<small>lei</small></div></div></div>
-    <p class="muted small">Operațiunile intracomunitare, taxarea inversă și achizițiile de servicii din afara țării (ex. abonamente software din UE/SUA) au rânduri speciale în D300 și nu sunt calculate automat în această versiune. Întreabă asistentul dacă ai astfel de facturi.</p>
+    <p class="muted small">Serviciile de la furnizori din străinătate (ex. abonamente software din UE/SUA) sunt incluse cu taxare inversă: TVA-ul apare și la colectată, și la deductibilă. În D300 se trec pe rândurile speciale pentru achiziții cu taxare inversă, nu pe cele de la cota de 21%. Achizițiile intracomunitare de bunuri nu sunt calculate automat. Întreabă asistentul dacă nu știi pe ce rând merge o sumă.</p>
     ${pasi([
       'Închide luna (sau ultima lună a trimestrului) din Registre, ca TVA-ul să fie regularizat automat (4427 = 4426, diferența în 4423 sau 4424).',
       'Descarcă D300 de pe anaf.ro și transcrie bazele și TVA-ul pe rândurile corespunzătoare fiecărei cote.',
       'Depune-l până pe 25 a lunii următoare perioadei și, dacă e cazul, D394 până pe 30.',
-      'Plătește TVA-ul și înregistrează plata din Operațiuni → Plată TVA.',
+      'Plătește TVA-ul în contul unic al ANAF; plata se recunoaște singură când imporți extrasul de cont.',
     ])}
     <div class="row" style="margin-top:14px"><button class="btn" data-ai="Ajută-mă să completez D300 pentru perioada ${per} ${st.an}. TVA colectată ${d.totalColectata} lei, TVA deductibilă ${d.totalDeductibila} lei. Pe ce rânduri trec sumele?">${icon('spark')}Ghidează-mă</button></div>
   </section>`;
+}
+
+function d301(el, ctx) {
+  const per = {};
+  for (const n of ctx.note) for (const l of n.linii) if (l.d301) {
+    const k = n.data.slice(0, 7); per[k] = per[k] || { baza: 0, tva: 0 };
+    per[k].baza = r2(per[k].baza + Number(l.baza || 0)); per[k].tva = r2(per[k].tva + Number(l.suma));
+  }
+  const k = Object.keys(per).sort().reverse();
+  el.innerHTML = `<section class="panel"><h2>D301 — TVA pentru serviciile din străinătate</h2>
+    <p class="muted">Firma nu e plătitoare de TVA, dar are cod special (art. 317). Pentru fiecare lună în care a primit servicii de la furnizori din străinătate, depune D301 și plătește TVA-ul până pe 25 a lunii următoare. Pentru furnizorii din UE se depune și D390 (VIES).</p>
+    ${k.length ? `<div class="table-wrap"><table><thead><tr><th>Luna</th><th class="n">Valoarea serviciilor</th><th class="n">TVA de plată</th><th>Termen</th></tr></thead><tbody>
+    ${k.map((m) => { const [y, l] = m.split('-').map(Number); return `<tr><td>${LUNI[l - 1]} ${y}</td><td class="n">${lei(per[m].baza)}</td><td class="n"><b>${lei(per[m].tva)}</b></td><td>25.${String(l === 12 ? 1 : l + 1).padStart(2, '0')}.${l === 12 ? y + 1 : y}</td></tr>`; }).join('')}
+    </tbody></table></div>` : '<p class="muted">Nicio achiziție de servicii din străinătate de la data codului special.</p>'}
+    <p class="muted small">Plata în contul unic al ANAF se recunoaște singură când imporți extrasul (se stinge din contul 4423).</p>
+    <div class="row" style="margin-top:12px"><button class="btn" data-ai="Cum completez și depun declarația D301 pentru serviciile cumpărate din străinătate (abonamente Google, GitHub etc.)?">${icon('spark')}Ghidează-mă</button></div></section>`;
 }
 
 function saft(el, ctx, rer) {

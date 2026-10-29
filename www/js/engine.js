@@ -213,6 +213,16 @@ export function noteDinDocument(doc, setari) {
     linii.push({ d: '4426', c: '4427', suma: tvaTI, expl: 'TVA taxare inversă', tvaCota: cota, baza: total, taxareInversa: true });
     const plata = { banca: '5121', casa: '5311', asociat: '4551', avans: '542' }[doc.plata];
     if (plata) linii.push({ d: contFurn, c: plata, suma: total, expl: 'Plată ' + partener });
+  } else if (doc.tip === 'cheltuiala' && doc.taxareInversa && setari.cod317 && (!setari.cod317DeLa || doc.data >= setari.cod317DeLa)) {
+    // neplătitor de TVA cu cod special (art. 317): TVA-ul pentru serviciile din străinătate se declară în D301 și
+    // se plătește; nu se deduce, deci intră în costul serviciului
+    const contCh = doc.cont || '628';
+    const cota = Number(doc.tvaCota) || 0.21;
+    const tvaTI = r2(total * cota);
+    linii.push({ d: contCh, c: '401', suma: total, expl: doc.descriere || cont(contCh).nume });
+    linii.push({ d: contCh, c: '4423', suma: tvaTI, expl: 'TVA servicii din străinătate (D301)', d301: true, tvaCota: cota, baza: total });
+    const plata = { banca: '5121', casa: '5311', asociat: '4551', avans: '542' }[doc.plata];
+    if (plata) linii.push({ d: '401', c: plata, suma: total, expl: 'Plată ' + partener });
   } else if (doc.tip === 'cheltuiala') {
     const contCh = doc.cont || '6588';
     const imob = contCh.startsWith('2');
@@ -348,13 +358,13 @@ export function calculTVA(note, from, to) {
     if (n.data < from || n.data > to || esteInchidere(n)) continue;
     for (const l of n.linii) {
       if (l.c === '4427') {
-        const k = String(Math.round((l.tvaCota ?? 0.21) * 100));
+        const k = l.taxareInversa ? 'ti' : String(Math.round((l.tvaCota ?? 0.21) * 100));
         out.colectata[k] = out.colectata[k] || { baza: 0, tva: 0 };
         out.colectata[k].tva = r2(out.colectata[k].tva + l.suma); out.colectata[k].baza = r2(out.colectata[k].baza + (l.baza || 0));
         out.totalColectata = r2(out.totalColectata + l.suma);
       }
       if (l.d === '4426') {
-        const k = String(Math.round((l.tvaCota ?? 0.21) * 100));
+        const k = l.taxareInversa ? 'ti' : String(Math.round((l.tvaCota ?? 0.21) * 100));
         out.deductibila[k] = out.deductibila[k] || { baza: 0, tva: 0 };
         out.deductibila[k].tva = r2(out.deductibila[k].tva + l.suma); out.deductibila[k].baza = r2(out.deductibila[k].baza + (l.baza || 0));
         out.totalDeductibila = r2(out.totalDeductibila + l.suma);

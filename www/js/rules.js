@@ -51,3 +51,13 @@ export const KEYWORD_RULES = [
   { cont: '303', eticheta: 'Obiecte de inventar (echipamente sub 5.000 lei)', kw: ['laptop', 'monitor', 'tastatura', 'mouse', 'telefon mobil', 'iphone', 'imprimanta', 'casti', 'scaun', 'birou', 'emag', 'altex', 'flanco', 'pc garage'] },
   { cont: '6028', eticheta: 'Materiale consumabile', kw: ['hartie', 'papetarie', 'birotica', 'toner', 'cartus', 'consumabile', 'dedeman', 'kaufland', 'lidl', 'carrefour', 'auchan', 'mega image', 'profi', 'penny'] },
 ];
+
+// Furnizori de servicii din străinătate (abonamente plătite cu cardul). Serviciile primite de la ei au locul
+// prestării în România (art. 278 alin. 2): se aplică taxarea inversă; o firmă neplătitoare de TVA are nevoie de
+// cod special de TVA (art. 317), depune D301 și plătește TVA-ul.
+const STRAINI = ['google', 'github', 'anthropic', 'openai', 'apple.com', 'apple developer', 'amazon web', 'aws ', 'microsoft', 'adobe', 'figma', 'meta platforms', 'facebk', 'facebook', 'linkedin', 'cloudflare', 'vercel', 'netlify', 'notion', 'slack', 'zoom.us', 'jetbrains', 'digitalocean', 'atlassian', 'canva', 'dropbox', 'mailchimp', 'hetzner', 'ovh', 'namecheap', 'godaddy', 'udemy', 'upwork', 'fiverr', 'envato', 'shopify', 'twilio', 'heroku', 'expo.dev', 'sentry'];
+export function furnizorStrain(text) {
+  const t = ' ' + String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + ' ';
+  if (STRAINI.some((k) => t.includes(k))) return true;
+  return /\b(usd|gbp|chf)\s?\d/.test(t);
+}

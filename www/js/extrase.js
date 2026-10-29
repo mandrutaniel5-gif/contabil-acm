@@ -3,6 +3,7 @@ import { db, uid } from './db.js';
 import { getSetari, salveazaNota, r2, balanta, reguli } from './engine.js';
 import { sugestieLocala } from './ai.js';
 import { curataCUI } from './ubl.js';
+import { furnizorStrain } from './rules.js';
 
 // ---------------------------------------------------------------- utilitare
 const fara = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -152,6 +153,16 @@ const REGULI_TEXT = [
   { test: /capital social|aport/, sens: 1, cont: '456', motiv: 'Depunere capital social' },
 ];
 
+/** Numărul facturii apare în text? „ACM-0021” se potrivește cu „acm 21”, „ACM0021”, „factura nr. 21”. */
+export function numarInText(nr, text) {
+  const m = fara(nr).match(/^([a-z]*)[^a-z0-9]*0*(\d+)$/);
+  if (!m || !m[2]) return false;
+  const [, serie, num] = m;
+  const t = ' ' + text.replace(/[^a-z0-9]+/g, ' ') + ' ';
+  if (serie && new RegExp(` ${serie} ?0*${num} `).test(t)) return true;
+  return new RegExp(` (factura|fact|fc|ff|inv|invoice|nr) ?(nr )?0*${num} `).test(t) || (num.length >= 4 && t.includes(` ${num} `));
+}
+
 function scorDocument(t, d) {
   let s = 0;
   const text = fara(`${t.detalii} ${t.contraparte}`);
@@ -162,7 +173,7 @@ function scorDocument(t, d) {
   if (nume.length && nume.filter((w) => text.includes(w)).length >= Math.min(2, nume.length)) s += 30;
   const cui = curataCUI(d.partener?.cui);
   if (cui && text.replace(/\D/g, ' ').split(/\s+/).includes(cui)) s += 30;
-  if (d.nr && new RegExp(`\\b${String(d.nr).replace(/[^\w]/g, '').replace(/^0+/, '')}\\b`).test(text.replace(/[^\w ]/g, ' ').replace(/\b0+(\d)/g, '$1'))) s += 35;
+  if (d.nr && numarInText(d.nr, text)) s += 35;
   if (d.partener?.iban && t.iban && t.iban.replace(/\s/g, '') === d.partener.iban.replace(/\s/g, '')) s += 40;
   if (t.data < d.data) s -= 25;
   return s;
@@ -249,10 +260,11 @@ export function propune(t, ctx) {
   }
   // 6. plată cu cardul fără factură în aplicație (abonamente, reclame): se creează cheltuiala, de completat cu factura
   if (sens < 0) {
+    const strain = furnizorStrain(`${t.contraparte} ${t.detalii}`);
     const inv = ctx.invatat?.get(cheieContraparte(t));
-    if (inv) return { incredere: inv.n >= 1 ? 88 : 70, motiv: `La fel ca plățile anterioare către ${t.contraparte || 'acest furnizor'}: ${inv.nume}. Atașează factura când o primești.`, cheltuialaNoua: { cont: inv.cont, tvaDeductibil: inv.tvaDeductibil ?? 100 }, linii: [{ d: inv.cont, c: contBanca, suma: S }] };
+    if (inv) return { incredere: inv.n >= 1 ? 88 : 70, motiv: `La fel ca plățile anterioare către ${t.contraparte || 'acest furnizor'}: ${inv.nume}. Atașează factura când o primești.`, cheltuialaNoua: { cont: inv.cont, tvaDeductibil: inv.tvaDeductibil ?? 100, taxareInversa: inv.taxareInversa ?? strain }, linii: [{ d: inv.cont, c: contBanca, suma: S }] };
     const sug = sugestieLocala(`${t.contraparte} ${t.detalii}`, S);
-    if (sug) return { incredere: 65, motiv: `Plată ${t.contraparte || ''} — ${sug.motiv} Atașează factura când o primești.`.trim(), cheltuialaNoua: { cont: sug.cont, tvaDeductibil: sug.tvaDeductibil }, linii: [{ d: sug.cont, c: contBanca, suma: S }] };
+    if (sug) return { incredere: 65, motiv: `Plată ${t.contraparte || ''} — ${sug.motiv}${strain ? ' Furnizor din străinătate: taxare inversă.' : ''} Atașează factura când o primești.`.trim(), cheltuialaNoua: { cont: sug.cont, tvaDeductibil: sug.tvaDeductibil, taxareInversa: strain }, linii: [{ d: sug.cont, c: contBanca, suma: S }] };
   }
   return { incredere: 0, motiv: sens > 0 ? 'Încasare neidentificată' : 'Plată neidentificată', linii: [] };
 }
@@ -266,7 +278,7 @@ function invatat(extrase) {
     if (y.stare !== 'inregistrat' || !p || p.legaNota || p.docId || !p.cheltuialaNoua || y.suma > 0) continue;
     const k = cheieContraparte(y); if (!k) continue;
     const v = m.get(k) || { n: 0 };
-    m.set(k, { cont: p.cheltuialaNoua.cont, tvaDeductibil: p.cheltuialaNoua.tvaDeductibil, nume: (p.motiv || '').split('—')[1]?.split('.')[0]?.trim() || p.cheltuialaNoua.cont, n: v.n + 1 });
+    m.set(k, { cont: p.cheltuialaNoua.cont, tvaDeductibil: p.cheltuialaNoua.tvaDeductibil, taxareInversa: p.cheltuialaNoua.taxareInversa, nume: (p.motiv || '').split('—')[1]?.split('.')[0]?.trim() || p.cheltuialaNoua.cont, n: v.n + 1 });
   }
   return m;
 }
@@ -348,6 +360,7 @@ export async function aplica(ex, t, p, setari) {
       id: uid(), tip: 'cheltuiala', tipDocument: 'Plată card', data: t.data, nr: '', partener: { nume: t.contraparte || 'Plată card', cui: '' },
       descriere: (t.detalii || t.contraparte || '').slice(0, 80), total: Math.abs(t.suma), tva: 0, tvaCota: 0,
       cont: p.cheltuialaNoua.cont, tvaDeductibil: p.cheltuialaNoua.tvaDeductibil, plata: 'banca', sursa: 'extras', deVerificat: true,
+      ...(p.cheltuialaNoua.taxareInversa ? { taxareInversa: true, tvaCota: reguli(setari).tva.standard } : {}),
       motivCont: 'Creată din extras: atașează factura furnizorului.', extrasTx: t.id,
     };
     await salveazaDocument(d, setari);

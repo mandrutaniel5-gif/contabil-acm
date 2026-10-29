@@ -72,6 +72,10 @@ function fiscal(el, ctx, p = []) {
       <label class="field"><span>Perioada fiscală TVA</span><select id="perioadaTVA"><option value="trimestru" ${s.perioadaTVA === 'trimestru' ? 'selected' : ''}>Trimestrială</option><option value="luna" ${s.perioadaTVA === 'luna' ? 'selected' : ''}>Lunară</option></select></label>
       <label class="check"><input type="checkbox" id="tvaLaIncasare" ${s.tvaLaIncasare ? 'checked' : ''}><span><b>TVA la încasare</b><br><span class="muted small">TVA-ul din facturile emise se datorează abia când clientul plătește.</span></span></label>
     </div>
+    <div id="cod317-w" ${s.platitorTVA || trecere ? 'hidden' : ''}>
+      <label class="check"><input type="checkbox" id="cod317" ${s.cod317 ? 'checked' : ''}><span><b>Are cod special de TVA (art. 317)</b><br><span class="muted small">Pentru firmele neplătitoare de TVA care cumpără servicii din străinătate (Google, GitHub, Apple…). Aplicația calculează TVA-ul de plată și declarația D301.</span></span></label>
+      <label class="field" style="max-width:260px"><span>Cod special de la data</span><input type="date" id="cod317DeLa" value="${e(s.cod317DeLa || '')}"></label>
+    </div>
     <label class="check"><input type="checkbox" id="areSalariati" ${s.areSalariati ? 'checked' : ''}><span><b>Firma are salariați</b><br><span class="muted small">Activează termenul lunar pentru D112. O microîntreprindere trebuie să aibă cel puțin un salariat, cu excepțiile prevăzute de lege.</span></span></label>
     <label class="field" style="max-width:260px"><span>Curs EUR pentru plafonul micro</span><input type="number" step="0.0001" id="cursEUR" value="${e(s.cursEUR)}"><small>Cursul BNR din ultima zi a anului precedent.</small></label>
     <details style="margin:10px 0 16px"><summary style="cursor:pointer;font-weight:600">Valori fiscale folosite în calcule</summary>
@@ -90,12 +94,12 @@ function fiscal(el, ctx, p = []) {
     </details>
     <div class="row end"><button class="btn primary" id="save">Salvează</button></div>`;
   const v = (x) => $(x, el);
-  v('#platitorTVA').onchange = () => { v('#tva-opts').hidden = !v('#platitorTVA').checked; };
+  v('#platitorTVA').onchange = () => { v('#tva-opts').hidden = !v('#platitorTVA').checked; v('#cod317-w').hidden = v('#platitorTVA').checked; };
   v('#save').onclick = async (ev) => {
     const n = (id) => Number(v(id).value);
-    const inainte = `${s.platitorTVA}|${s.tvaDeLa || ''}`;
+    const inainte = `${s.platitorTVA}|${s.tvaDeLa || ''}|${!!s.cod317}|${s.cod317DeLa || ''}`;
     await salveaza(ctx, {
-      regim: v('#regim').value, platitorTVA: v('#platitorTVA').checked, tvaDeLa: v('#platitorTVA').checked ? v('#tvaDeLa').value : '', perioadaTVA: v('#perioadaTVA').value, regimConfirmat: true,
+      regim: v('#regim').value, platitorTVA: v('#platitorTVA').checked, tvaDeLa: v('#platitorTVA').checked ? v('#tvaDeLa').value : '', perioadaTVA: v('#perioadaTVA').value, regimConfirmat: true, cod317: v('#cod317').checked, cod317DeLa: v('#cod317DeLa').value,
       tvaLaIncasare: v('#tvaLaIncasare').checked, areSalariati: v('#areSalariati').checked, cursEUR: n('#cursEUR'), cursSetat: true,
       reguli: {
         micro: { cota: n('#r-micro') / 100, plafonEUR: n('#r-plafon'), excluseBaza: v('#r-excl').value.split(',').map((x) => x.trim()).filter(Boolean) },
@@ -105,10 +109,10 @@ function fiscal(el, ctx, p = []) {
       },
     }, ev.currentTarget);
     const ns = ctx.setari;
-    if (`${ns.platitorTVA}|${ns.tvaDeLa || ''}` !== inainte) {
+    if (`${ns.platitorTVA}|${ns.tvaDeLa || ''}|${!!ns.cod317}|${ns.cod317DeLa || ''}` !== inainte) {
       // notele documentelor afectate se refac cu noul regim de TVA
       const { salveazaDocument } = await import('./engine.js');
-      const de = !s.platitorTVA && ns.platitorTVA ? ns.tvaDeLa || '' : [s.tvaDeLa || '', ns.tvaDeLa || ''].sort()[0];
+      const de = !s.platitorTVA && ns.platitorTVA ? ns.tvaDeLa || '' : ns.cod317 !== !!s.cod317 ? ns.cod317DeLa || '' : [s.tvaDeLa || '', ns.tvaDeLa || ''].sort()[0];
       const docs = ctx.documente.filter((d) => (d.data || '') >= de);
       for (const d of docs) await salveazaDocument(d, ns);
       if (docs.length) { await ctx.reload(); toast(`Regimul de TVA a fost aplicat la ${docs.length} ${docs.length === 1 ? 'document' : 'documente'} din ${de ? 'perioada de la ' + de.split('-').reverse().join('.') : 'toată perioada'}.`); }

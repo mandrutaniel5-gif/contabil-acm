@@ -26,18 +26,21 @@ async function date() {
   await e.saveSetari({ ...(await e.getSetari()), cui: '51234567', nume: 'ACM CODE S.R.L.', adresa: 'Nr. 344, Avram Iancu, jud. Bihor', iban: 'RO49BTRLRONCRT0512345601', administrator: 'Mândruț Aniel-Ionatan' });
   const s = await e.getSetari();
   const op = (id) => e.OPERATII.find((o) => o.id === id);
-  if ((await db.all('note')).length) return;
+  if ((await db.all('note')).length) return false;
   await e.salveazaNota({ data: '2026-10-05', explicatie: 'Capital', linii: op('capital').linii(200), tipNota: 'operatie' });
   await e.salveazaDocument({ tip: 'venit', data: '2026-10-08', nr: 'ACM-0001', total: 12500, cont: '704', plata: 'neplatit', partener: { nume: 'CINEMA PALACE SRL — departamentul de dezvoltare aplicații mobile', cui: 'RO40112233' }, descriere: 'Dezvoltare aplicație mobilă de rezervări, etapa 1 din 3, conform contractului de prestări servicii' }, s);
   await e.salveazaDocument({ tip: 'cheltuiala', data: '2026-10-10', nr: 'HST 771', total: 605, cont: '628', plata: 'banca', partener: { nume: 'HOSTERION SRL', cui: 'RO20198340' }, descriere: 'Găzduire web 12 luni' }, s);
+  const S = await import('./js/salarii.js');
+  await S.salveaza([{ id: 'a1', nume: 'Popescu Andreea', tip: 'cim', deLa: '2026-10-01', brut: 4325, norma: 8, persoane: 0 }], '2026-10-01');
+  return true;
 }
 
 export async function ruleaza() {
   await pauza(2500);
   log('START', navigator.userAgent, JSON.stringify(latime()));
-  await date();
+  if (await date()) { log('date de test create, repornesc aplicația'); location.reload(); return; }
   // 1. fiecare ecran: nu are voie să fie mai lat decât ecranul și nici mărit
-  const ecrane = ['acasa', 'documente', 'documente/nou', 'banca', 'operatii', 'parteneri', 'registre/jurnal', 'registre/balanta', 'registre/fisa', 'registre/casa', 'registre/tva', 'registre/mijloace', 'registre/inchidere', 'registre/inventar', 'registre/situatii', 'registre/an', 'declaratii', 'declaratii/impozit', 'declaratii/saft', 'declaratii/salarii', 'formulare', 'formulare/chitanta', 'formulare/dispozitie', 'formulare/decont', 'formulare/deplasare', 'formulare/hotarare', 'ghid', 'setari/firma', 'setari/fiscal', 'setari/sync', 'setari/spv', 'setari/auto', 'setari/solduri', 'setari/date', 'setari/aspect'];
+  const ecrane = ['acasa', 'documente', 'documente/nou', 'banca', 'operatii', 'parteneri', 'registre/jurnal', 'registre/balanta', 'registre/fisa', 'registre/casa', 'registre/tva', 'registre/mijloace', 'registre/inchidere', 'registre/inventar', 'registre/situatii', 'registre/an', 'declaratii', 'declaratii/impozit', 'declaratii/saft', 'declaratii/salarii', 'declaratii/tva', 'formulare', 'formulare/chitanta', 'formulare/dispozitie', 'formulare/decont', 'formulare/deplasare', 'formulare/hotarare', 'ghid', 'setari/firma', 'setari/fiscal', 'setari/sync', 'setari/spv', 'setari/auto', 'setari/solduri', 'setari/date', 'setari/aspect'];
   for (const h of ecrane) {
     await mergi(h);
     const l = latime();
@@ -58,12 +61,26 @@ export async function ruleaza() {
     document.activeElement?.blur(); await pauza(900);
     document.querySelector('[data-close]')?.click(); await pauza(400);
   }
+  // 2b. foaia de salariat (dialog) pe ecran mic: câmpurile se văd și nu măresc pagina
+  await mergi('declaratii/salarii');
+  document.querySelector('#s-add')?.click(); await pauza(700);
+  const an = document.querySelector('#a-nume');
+  if (an) { await atinge(an, 'salariat nume'); const l = latime(); ok('fără zoom în foaia de salariat', l.scale <= 1.01 && l.sw <= l.iw + 1, JSON.stringify(l)); await captura('foaie_salariat', 900); document.activeElement?.blur(); }
+  else ok('foaia de salariat se deschide', false, 'lipsă #a-nume');
+  document.querySelector('[data-close]')?.click(); await pauza(400);
   // 3. apeluri native (fără CORS): BNR și ANAF
   try {
     const bnr = await import('./js/bnr.js');
     await bnr.actualizeaza({ fortat: true });
     const c = await bnr.curs(new Date().toISOString().slice(0, 10), 'EUR');
-    ok('curs BNR prin HTTP nativ', c > 4 && c < 7, String(c));
+    let diag = String(c) + ' ' + bnr.ultimaEroare.text;
+    if (!(c > 4)) {
+      const { nativeFetch } = await import('./js/host.js');
+      for (const u of ['https://www.bnr.ro/nbrfxrates.xml', 'https://bnr.ro/nbrfxrates.xml', 'https://www.bnr.ro/files/xml/years/nbrfxrates2026.xml']) {
+        try { const r = await nativeFetch(u); diag += ` | ${u} → ${r.status} ${r.text().slice(0, 120).replace(/\s+/g, ' ')}`; } catch (e) { diag += ` | ${u} → ${e.message}`; }
+      }
+    }
+    ok('curs BNR prin HTTP nativ', c > 4 && c < 7, diag);
   } catch (e) { ok('curs BNR prin HTTP nativ', false, e.message); }
   try {
     const ai = await import('./js/ai.js');

@@ -3,7 +3,7 @@
 import subprocess, sys, re, json, time, os, shutil
 UDID, OUT = sys.argv[1], sys.argv[2]
 os.makedirs(OUT, exist_ok=True)
-idb = shutil.which('idb')
+idb = shutil.which('idb') or next((p for p in [os.path.expanduser('~/.local/bin/idb')] + [os.path.join(os.path.expanduser('~/Library/Python'), v, 'bin', 'idb') for v in (os.listdir(os.path.expanduser('~/Library/Python')) if os.path.isdir(os.path.expanduser('~/Library/Python')) else [])] if os.path.exists(p)), None)
 log = open(os.path.join(OUT, 'consola.txt'), 'w')
 p = subprocess.Popen(['xcrun', 'simctl', 'launch', '--console-pty', '--terminate-running-process', UDID, 'ro.acmcode.contabil'],
                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)

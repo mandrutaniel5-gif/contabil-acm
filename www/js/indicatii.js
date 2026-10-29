@@ -1,5 +1,5 @@
 // Indicații automate: verifică datele și spune pe înțeles ce e de făcut. Funcționează fără AI.
-import { balanta, verificaBalanta, lunaInterval, lei, LUNI, azi, cifraAfaceri, reguli, dataRo, iso } from './engine.js';
+import { balanta, verificaBalanta, lunaInterval, lei, LUNI, azi, cifraAfaceri, reguli, dataRo, iso, tvaLa } from './engine.js';
 import { termene, zilePana } from './declaratii.js';
 import { conditieMicro, lista as listaSalariati } from './salarii.js';
 
@@ -37,7 +37,19 @@ export async function indicatii({ note, documente, setari, mijloace, extrase = [
   if (neclare.length) out.push({ grav: 'warn', text: `${neclare.length} ${neclare.length === 1 ? 'tranzacție din extras așteaptă' : 'tranzacții din extras așteaptă'} confirmarea ta.`, act: ['Deschide Banca', '#banca'] });
   const restante = documente.filter((d) => d.plata === 'neplatit' && !d.achitat && d.tip === 'venit' && (d.scadenta || '9999') < azi());
   if (restante.length) out.push({ grav: 'info', text: `${restante.length} ${restante.length === 1 ? 'client are factura' : 'facturi de la clienți sunt'} peste scadență: ${lei(restante.reduce((t, d) => t + Number(d.total) - Number(d.platitPartial || 0), 0))} lei de încasat.`, act: ['Parteneri', '#parteneri'] });
-  if (!setari.platitorTVA && documente.some((d) => d.taxareInversa && d.data?.startsWith(String(an)))) out.push({ grav: 'warn', text: 'Ai facturi cu taxare inversă (servicii din străinătate), deși firma nu e plătitoare de TVA. Probabil ai nevoie de cod special de TVA (art. 317) și de declarația D301. Întreabă asistentul sau contabilul.' });
+  // Servicii din străinătate cumpărate de o firmă neplătitoare de TVA: cod special (art. 317) și D301
+  const strain = documente.filter((d) => d.tip === 'cheltuiala' && d.taxareInversa && !tvaLa(setari, d.data) && (d.data || '') >= `${an - 1}-01-01`);
+  if (strain.length && !setari.cod317) {
+    const furn = [...new Set(strain.map((d) => (d.partener?.nume || '').split(/\s|\*/)[0]).filter(Boolean))].slice(0, 4).join(', ');
+    out.push({ grav: 'err', text: `Plătești servicii de la firme din străinătate (${furn}). Chiar dacă firma nu e plătitoare de TVA, pentru ele se datorează TVA în România (taxare inversă): ai nevoie de un cod special de TVA (art. 317, formularul 700 la ANAF), depui lunar D301 și plătești TVA-ul de 21%. Pentru furnizorii din UE se depune și D390. După ce primești codul, bifează-l în Regim fiscal.`, act: ['Regim fiscal', '#setari/fiscal'] });
+  } else if (strain.length) {
+    const inainte = strain.filter((d) => setari.cod317DeLa && d.data < setari.cod317DeLa);
+    if (inainte.length) out.push({ grav: 'warn', text: `${inainte.length} plăți către furnizori din străinătate sunt dinainte de data codului special de TVA (${dataRo(setari.cod317DeLa)}), în total ${lei(inainte.reduce((a, d) => a + Number(d.total), 0))} lei. TVA-ul pentru ele (21%) se datora și atunci: se declară cu D301 pentru lunile respective. Discută cu un contabil cum le regularizezi.`, act: ['Întreabă asistentul', '#declaratii'], ai: 'Am plătit servicii din străinătate înainte să am cod special de TVA (art. 317). Cum regularizez TVA-ul pentru lunile acelea?' });
+    const per = {};
+    for (const n of note) for (const l of n.linii) if (l.d301) per[n.data.slice(0, 7)] = (per[n.data.slice(0, 7)] || 0) + Number(l.suma);
+    const lunaTrecuta = iso(new Date(now.getFullYear(), now.getMonth() - 1, 1)).slice(0, 7);
+    if (per[lunaTrecuta]) out.push({ grav: 'warn', text: `D301 pentru ${LUNI[Number(lunaTrecuta.slice(5)) - 1]}: TVA de ${lei(per[lunaTrecuta])} lei pentru serviciile din străinătate. Se depune și se plătește până pe 25 ${LUNI[now.getMonth()]}.`, act: ['Declarații', '#declaratii'] });
+  }
   if (spv && spv.respinse && spv.respinse.length && Date.now() - (spv.ultima || 0) < 30 * 864e5) out.push({ grav: 'err', text: `ANAF a respins ${spv.respinse.length === 1 ? 'o factură' : spv.respinse.length + ' facturi'} trimise în SPV. Corectează-le în ACM Docs și retrimite-le.`, act: ['Detalii', '#setari/spv'] });
   if (!seif && note.length > 5 && !pasi) out.push({ grav: 'info', text: 'Datele sunt doar pe acest dispozitiv. Creează seiful criptat ca să le ai și pe telefon și să nu le pierzi dacă se strică dispozitivul.', act: ['Dispozitive', '#setari/sync'] });
 
