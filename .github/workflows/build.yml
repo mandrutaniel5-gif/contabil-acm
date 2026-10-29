@@ -12,12 +12,12 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx electron-builder --win nsis --x64 --publish never
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ACM-Contabil-Windows
           path: dist/*.exe
@@ -25,12 +25,13 @@ jobs:
   android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 21 }
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK (preinstalat pe runner)
+        run: echo "sdk.dir=$ANDROID_HOME" && ls "$ANDROID_HOME"
       - run: npm ci
       - run: npx cap add android
       - name: Permisiune cameră (scanare bonuri)
@@ -45,7 +46,7 @@ jobs:
       - run: |
           VER=$(node -p "require('./package.json').version")
           cp android/app/build/outputs/apk/debug/app-debug.apk "ACM-Contabil-$VER.apk"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ACM-Contabil-Android
           path: ACM-Contabil-*.apk
@@ -53,8 +54,8 @@ jobs:
   ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - name: Cel mai nou Xcode
         run: |
@@ -80,7 +81,7 @@ jobs:
           mkdir Payload
           cp -R ios-build/Build/Products/Release-iphoneos/App.app Payload/
           zip -qr "ACM-Contabil-$VER.ipa" Payload
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ACM-Contabil-iOS
           path: ACM-Contabil-*.ipa
