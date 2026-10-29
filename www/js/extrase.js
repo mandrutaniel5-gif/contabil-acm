@@ -252,7 +252,9 @@ export function propune(t, ctx) {
   if (admin.length && admin.filter((w) => text.includes(w)).length >= Math.min(2, admin.length)) {
     return sens > 0
       ? { incredere: 70, motiv: 'Bani puși de administrator în firmă (împrumut)', linii: [{ d: contBanca, c: '4551', suma: S }] }
-      : { incredere: 55, motiv: 'Bani dați administratorului (rambursare împrumut sau decont). Dacă sunt dividende, alege „Distribuire dividende”.', linii: [{ d: '4551', c: contBanca, suma: S }] };
+      : /rambursare|restituire|returnare/.test(text) && /imprumut|credit/.test(text) && (solduri['4551'] || 0) >= S - 0.01
+        ? { incredere: 88, motiv: 'Rambursarea împrumutului dat de administrator', linii: [{ d: '4551', c: contBanca, suma: S }] }
+        : { incredere: 55, motiv: 'Bani dați administratorului (rambursare împrumut sau decont). Dacă sunt dividende, alege „Distribuire dividende”.', linii: [{ d: '4551', c: contBanca, suma: S }] };
   }
   // 5. transfer între conturile firmei
   if (setari.iban && t.iban && t.iban.replace(/\s/g, '') === setari.iban.replace(/\s/g, '')) {

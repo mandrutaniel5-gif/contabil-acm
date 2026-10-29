@@ -76,7 +76,7 @@ export async function ruleaza() {
     let diag = String(c) + ' ' + bnr.ultimaEroare.text;
     if (!(c > 4)) {
       const { nativeFetch } = await import('./js/host.js');
-      for (const u of ['https://www.bnr.ro/nbrfxrates.xml', 'https://bnr.ro/nbrfxrates.xml', 'https://www.bnr.ro/files/xml/years/nbrfxrates2026.xml']) {
+      for (const u of ['https://curs.bnr.ro/nbrfxrates.xml', 'https://curs.bnr.ro/files/xml/years/nbrfxrates2026.xml']) {
         try { const r = await nativeFetch(u); diag += ` | ${u} → ${r.status} ${r.text().slice(0, 120).replace(/\s+/g, ' ')}`; } catch (e) { diag += ` | ${u} → ${e.message}`; }
       }
     }
@@ -103,7 +103,9 @@ export async function ruleaza() {
   } catch (e) { ok('WebCrypto ECDH/HKDF + DecompressionStream', false, e.message); }
   const n = rezultate.filter((r) => !r.ok).length;
   log('GATA', JSON.stringify({ total: rezultate.length, esuate: n }));
-  console.log('ACMDONE ' + JSON.stringify(rezultate));
+  // un rând pe rezultat (consola iOS taie rândurile foarte lungi)
+  for (const r of rezultate) console.log('ACMRES ' + JSON.stringify({ ...r, detalii: String(r.detalii).slice(0, 600) }));
+  console.log('ACMDONE ' + rezultate.length);
 }
 
-ruleaza().catch((e) => { log('FAIL', 'excepție', e.message); console.log('ACMDONE []'); });
+ruleaza().catch((e) => { log('FAIL', 'excepție', e.message); console.log('ACMDONE 0'); });

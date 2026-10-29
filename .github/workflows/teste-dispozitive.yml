@@ -31,7 +31,7 @@ jobs:
         run: |
           cp test/autotest.js www/autotest.js
           sed -i '' 's#</body>#  <script type="module" src="autotest.js"></script>\n</body>#' www/index.html
-      - run: npx cap add ios && npx cap sync ios
+      - run: npx cap add ios && npx cap sync ios && bash scripts/ios-plist.sh
       - name: Compilare pentru simulator
         run: |
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
@@ -41,7 +41,8 @@ jobs:
         run: |
           mkdir -p rezultate-ios
           { brew tap facebook/fb && brew install idb-companion; } > rezultate-ios/idb.txt 2>&1 || echo "brew idb-companion: eșuat" >> rezultate-ios/idb.txt
-          python3 -m pip install --user --break-system-packages fb-idb >> rezultate-ios/idb.txt 2>&1 || pipx install fb-idb >> rezultate-ios/idb.txt 2>&1 || echo "fb-idb: eșuat" >> rezultate-ios/idb.txt
+          # fb-idb nu merge cu Python 3.15 (asyncio): îl instalăm izolat, cu Python 3.12, prin uv
+          { brew install uv && uv tool install --python 3.12 fb-idb; } >> rezultate-ios/idb.txt 2>&1 || echo "fb-idb: eșuat" >> rezultate-ios/idb.txt
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"; echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           { echo "user-base: $(python3 -m site --user-base)"; ls "$(python3 -m site --user-base)/bin" "$HOME/.local/bin"; which idb_companion; } >> rezultate-ios/idb.txt 2>&1 || true
       - name: Simulator iPhone și test

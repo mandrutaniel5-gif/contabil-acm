@@ -53,7 +53,7 @@ export async function render(main, ctx) {
   <div class="split" style="margin-top:16px">
     <section class="panel">
       <h2>Ce ai de făcut</h2>
-      ${tips.map((x) => `<div class="tip ${x.grav === 'info' ? '' : x.grav}"><span class="dot"></span><div class="grow"><p>${e(x.text)}</p>${x.act ? `<div class="act"><button class="btn sm ghost" ${x.ai ? `data-ai="${e(x.ai)}"` : `data-go="${e(x.act[1])}"`}>${e(x.act[0])}</button></div>` : ''}</div></div>`).join('')}
+      ${tips.map((x) => `<div class="tip ${x.grav === 'info' ? '' : x.grav}"><span class="dot"></span><div class="grow"><p>${e(x.text)}</p>${x.act || x.ascunde ? `<div class="act">${x.act ? `<button class="btn sm ghost" ${x.ai ? `data-ai="${e(x.ai)}"` : `data-go="${e(x.act[1])}"`}>${e(x.act[0])}</button>` : ''}${x.ascunde ? `<button class="btn sm ghost" data-ascunde="${e(x.cheie)}">Am rezolvat</button>` : ''}</div>` : ''}</div></div>`).join('')}
       <div class="row" style="margin-top:8px"><button class="btn sm" data-ai="Verifică-mi te rog contabilitatea pe luna aceasta și spune-mi dacă am uitat ceva sau dacă e ceva greșit.">${icon('spark')}Cere asistentului o verificare completă</button></div>
     </section>
     <div>
@@ -78,6 +78,7 @@ export async function render(main, ctx) {
       </section>
     </div>
   </div>`;
+  main.querySelectorAll('[data-ascunde]').forEach((b) => (b.onclick = async () => { await saveSetari({ ...setari, indicatiiAscunse: [...(setari.indicatiiAscunse || []), b.dataset.ascunde] }); await ctx.reload(); }));
   const pp = main.querySelector('#pp-ascunde');
   if (pp) pp.onclick = async () => { await saveSetari({ ...setari, primiPasiAscuns: true }); await ctx.reload(); };
 }

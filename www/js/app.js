@@ -89,6 +89,7 @@ async function route(opt = {}) {
   const [name, ...params] = (location.hash.slice(1) || 'acasa').split('/');
   const r = ROUTES[name] || ROUTES.acasa;
   const key = ROUTES[name] ? name : 'acasa';
+  document.body.classList.toggle('editor', (['documente', 'parteneri'].includes(key) && params.length > 0) || (key === 'registre' && params[1] === 'nou') || key === 'setari' || key === 'formulare' && params.length > 0);
   $$('[data-r]').forEach((b) => b.setAttribute('aria-current', b.dataset.r === key || (b.dataset.r === 'more' && MAI_MULT.includes(key)) ? 'page' : 'false'));
   document.querySelector('.brand small').textContent = ctx.setari.nume;
   asistent.seteazaEcran(key, ctx);

@@ -175,7 +175,7 @@ export async function salveazaFactura(xmlBytes, m, set, docs) {
       data: f.data, scadenta: f.scadenta || '', nr: f.nr,
       partener: { nume: partener.nume, cui: partener.cui, adresa: partener.adresa, regCom: partener.regCom, platitorTVA: partener.platitorTVA, iban: partener.iban || f.ibanFurnizor || '' },
       descriere,
-      total: totalLei, tva: tvaLa(set, f.data) ? tvaLei : 0, tvaCota: tvaLa(set, f.data) ? cotaPrincipala : 0,
+      total: totalLei, tva: tvaLei, tvaCota: cotaPrincipala, // TVA-ul se păstrează mereu; nota îl folosește doar dacă firma e plătitoare la acea dată
       taxareInversa: !!f.taxareInversa,
       moneda: f.moneda, totalValuta: f.moneda !== 'RON' ? f.total : null, curs: f.moneda !== 'RON' ? cursV : null,
       cont: dublura?.cont || (primita ? (sug?.cont || '628') : '704'),

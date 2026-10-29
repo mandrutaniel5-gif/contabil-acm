@@ -44,7 +44,7 @@ export async function indicatii({ note, documente, setari, mijloace, extrase = [
     out.push({ grav: 'err', text: `Plătești servicii de la firme din străinătate (${furn}). Chiar dacă firma nu e plătitoare de TVA, pentru ele se datorează TVA în România (taxare inversă): ai nevoie de un cod special de TVA (art. 317, formularul 700 la ANAF), depui lunar D301 și plătești TVA-ul de 21%. Pentru furnizorii din UE se depune și D390. După ce primești codul, bifează-l în Regim fiscal.`, act: ['Regim fiscal', '#setari/fiscal'] });
   } else if (strain.length) {
     const inainte = strain.filter((d) => setari.cod317DeLa && d.data < setari.cod317DeLa);
-    if (inainte.length) out.push({ grav: 'warn', text: `${inainte.length} plăți către furnizori din străinătate sunt dinainte de data codului special de TVA (${dataRo(setari.cod317DeLa)}), în total ${lei(inainte.reduce((a, d) => a + Number(d.total), 0))} lei. TVA-ul pentru ele (21%) se datora și atunci: se declară cu D301 pentru lunile respective. Discută cu un contabil cum le regularizezi.`, act: ['Întreabă asistentul', '#declaratii'], ai: 'Am plătit servicii din străinătate înainte să am cod special de TVA (art. 317). Cum regularizez TVA-ul pentru lunile acelea?' });
+    if (inainte.length) out.push({ grav: 'warn', text: `${inainte.length} plăți către furnizori din străinătate sunt dinainte de data codului special de TVA (${dataRo(setari.cod317DeLa)}), în total ${lei(inainte.reduce((a, d) => a + Number(d.total), 0))} lei. TVA-ul pentru ele (21%) se datora și atunci: se declară cu D301 pentru lunile respective. Discută cu un contabil cum le regularizezi.`, act: ['Întreabă asistentul', '#declaratii'], ai: 'Am plătit servicii din străinătate înainte să am cod special de TVA (art. 317). Cum regularizez TVA-ul pentru lunile acelea?', cheie: `strain-inainte-${inainte.length}`, ascunde: true });
     const per = {};
     for (const n of note) for (const l of n.linii) if (l.d301) per[n.data.slice(0, 7)] = (per[n.data.slice(0, 7)] || 0) + Number(l.suma);
     const lunaTrecuta = iso(new Date(now.getFullYear(), now.getMonth() - 1, 1)).slice(0, 7);
@@ -127,6 +127,8 @@ export async function indicatii({ note, documente, setari, mijloace, extrase = [
     }
   }
 
+  const ascunse = setari.indicatiiAscunse || [];
+  for (let i = out.length - 1; i >= 0; i--) if (out[i].cheie && ascunse.includes(out[i].cheie)) out.splice(i, 1);
   if (!out.length) out.push({ grav: 'ok', text: 'Totul arată în regulă. Înregistrează documentele pe măsură ce apar și închide luna la final.' });
   return out;
 }

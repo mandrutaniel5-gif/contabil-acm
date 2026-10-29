@@ -169,6 +169,10 @@ tbody tr.row-click { cursor: pointer; } tbody tr.row-click:hover td { background
 input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], input[type="url"], select, textarea {
   width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); min-height: 42px;
 }
+/* iOS: câmpurile de dată au lățime și înălțime proprii (ies din casetă); le aducem la forma celorlalte */
+input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; display: block; box-sizing: border-box; max-width: 100%; height: 42px; line-height: 20px; text-align: left; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+input[type="date"]::-webkit-datetime-edit { padding: 0; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: var(--surface); }
 textarea { resize: vertical; min-height: 80px; }
 .fields-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; }
@@ -264,7 +268,7 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
 @media (max-width: 760px) {
   .shell { display: block; }
   .side { display: none; }
-  main { padding: calc(18px + var(--sa-top)) calc(16px + var(--sa-right)) calc(110px + var(--sa-bottom)) calc(16px + var(--sa-left)); }
+  main { padding: calc(18px + var(--sa-top)) calc(16px + var(--sa-right)) calc(160px + var(--sa-bottom)) calc(16px + var(--sa-left)); }
   h1 { font-size: 26px; }
   .g2, .g3, .fields-2, .fields-3 { grid-template-columns: minmax(0, 1fr); }
   .sheet-head { padding-top: calc(16px + var(--sa-top)); }
@@ -273,6 +277,8 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
   .figure .value { overflow-wrap: anywhere; }
   .seg:not(.full) { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
   .panel { padding: 18px 16px; border-radius: 16px; }
+  /* bara de stare (ceas, baterie) nu acoperă conținutul când derulezi */
+  body::before { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--sa-top); background: var(--bg); z-index: 45; pointer-events: none; }
   .table-wrap { margin: 0 -16px; padding: 0 16px; }
   .figure .value { font-size: 25px; }
   .figures .figure { padding: 4px 14px; }
@@ -315,3 +321,6 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
   .panel { border: 0; padding: 0; }
   body { background: #fff; color: #000; }
 }
+
+/* pe ecranele cu formulare butonul asistentului nu acoperă butoanele Salvează */
+body.editor .fab { display: none !important; }

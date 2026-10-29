@@ -105,9 +105,7 @@ jobs:
       - run: npx cap sync ios
       - name: Permisiuni cameră și poze
         run: |
-          P=ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Camera este folosită pentru fotografierea bonurilor și facturilor.'" $P
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Accesul la poze permite atașarea documentelor justificative.'" $P
+          bash scripts/ios-plist.sh
       - name: Build (nesemnat)
         run: |
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
