@@ -1,0 +1,18 @@
+# Verifică asistentul AI pe serverul real (după publicarea cheii). Rezultatul ajunge pe ramura „rezultate-asistent”.
+name: Verifică asistentul
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright@1.64.1 && npx playwright install chromium
+      - run: node test/verifica_asistent.mjs || true
+      - name: Publică
+        run: |
+          cd rezultate-asistent && git init -q -b rezultate-asistent && git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git add -A && git commit -qm "asistent ${GITHUB_SHA::7}" && git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" rezultate-asistent
