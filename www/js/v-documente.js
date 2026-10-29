@@ -15,24 +15,26 @@ export async function render(main, ctx, params) {
   const { documente } = ctx;
   const st = render.st || (render.st = { tip: 'toate', luna: '' });
   const luni = [...new Set(documente.map((d) => (d.data || '').slice(0, 7)))].sort().reverse();
-  const list = documente.filter((d) => (st.tip === 'toate' || d.tip === st.tip) && (!st.luna || d.data?.startsWith(st.luna)))
+  const list = documente.filter((d) => (st.tip === 'toate' || (st.tip === 'verificat' ? d.deVerificat : d.tip === st.tip)) && (!st.luna || d.data?.startsWith(st.luna)))
     .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
   const tot = list.reduce((s, d) => s + (d.tip === 'venit' ? 1 : -1) * Number(d.total || 0), 0);
 
   main.innerHTML = `
   <div class="page-head">
     <div><h1>Documente</h1><p class="sub">Bonuri, chitanțe, facturi primite și emise. Fiecare document creează automat nota contabilă.</p></div>
-    <div class="row"><button class="btn primary" data-go="#documente/nou">${icon('scan')}Adaugă document</button></div>
+    <div class="row"><button class="btn" id="xml" title="ZIP sau XML descărcat din SPV sau ACM Docs">${icon('download')}Importă e-Factură</button><input type="file" id="xmlf" hidden multiple accept=".zip,.xml"><button class="btn primary" data-go="#documente/nou">${icon('scan')}Adaugă document</button></div>
   </div>
   <section class="panel">
     <div class="row" style="justify-content:space-between;margin-bottom:10px">
-      <div class="seg" role="group" aria-label="Tip">${[['toate', 'Toate'], ['cheltuiala', 'Cheltuieli'], ['venit', 'Venituri']].map(([k, l]) => `<button data-tip="${k}" aria-pressed="${st.tip === k}">${l}</button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="Tip">${[['toate', 'Toate'], ['cheltuiala', 'Cheltuieli'], ['venit', 'Venituri'], ['verificat', `De verificat${documente.filter((d) => d.deVerificat).length ? ' (' + documente.filter((d) => d.deVerificat).length + ')' : ''}`]].map(([k, l]) => `<button data-tip="${k}" aria-pressed="${st.tip === k}">${l}</button>`).join('')}</div>
       <select id="f-luna" style="width:auto;min-width:180px"><option value="">Toate lunile</option>${luni.map((l) => `<option value="${l}" ${st.luna === l ? 'selected' : ''}>${LUNI[Number(l.slice(5)) - 1]} ${l.slice(0, 4)}</option>`).join('')}</select>
     </div>
     ${list.length ? `<ul class="list">${list.map((d) => `
       <li class="clickable" data-go="#documente/${d.id}">
         <div class="grow"><div class="t">${e(d.partener?.nume || d.descriere || 'Document')}</div>
         <div class="m">${dataRo(d.data)} · ${e(d.tipDocument || '')} ${e(d.nr || '')} · ${e(cont(d.cont).nume)}</div></div>
+        ${d.sursa === 'SPV' ? '<span class="badge accent">SPV</span>' : ''}
+        ${d.deVerificat ? '<span class="badge warn">de verificat</span>' : ''}
         ${!d.fisier ? '<span class="badge warn">fără fișier</span>' : ''}
         ${d.plata === 'neplatit' && !d.achitat ? `<span class="badge">${d.tip === 'venit' ? 'neîncasat' : 'neplătit'}</span>` : ''}
         <div class="amt num" style="color:${d.tip === 'venit' ? 'var(--ok)' : 'inherit'}">${d.tip === 'venit' ? '+' : '−'}${lei(d.total)}</div>
@@ -42,6 +44,17 @@ export async function render(main, ctx, params) {
   </section>`;
   $$('[data-tip]', main).forEach((b) => (b.onclick = () => { st.tip = b.dataset.tip; render(main, ctx, []); }));
   $('#f-luna', main).onchange = (ev) => { st.luna = ev.target.value; render(main, ctx, []); };
+  $('#xml', main).onclick = () => $('#xmlf', main).click();
+  $('#xmlf', main).onchange = async (ev) => {
+    const files = [...ev.target.files]; ev.target.value = '';
+    try {
+      const { importaFisier } = await import('./anaf.js');
+      let n = 0;
+      await withLoad(async () => { for (const f of files) n += (await importaFisier(f)).length; });
+      toast(`${n} ${n === 1 ? 'factură importată' : 'facturi importate'}. Verifică-le pe cele marcate „de verificat”.`);
+      await ctx.reload();
+    } catch (err) { toast('Fișierul nu a putut fi citit ca e-Factură: ' + err.message); }
+  };
 }
 
 async function editor(main, ctx, id) {
@@ -75,17 +88,21 @@ async function editor(main, ctx, id) {
         <button data-t="cheltuiala" aria-pressed="${doc.tip === 'cheltuiala'}">Cheltuială — am cumpărat ceva</button>
         <button data-t="venit" aria-pressed="${doc.tip === 'venit'}">Venit — am emis o factură</button>
       </div>
+      ${doc.sursa === 'SPV' || doc.sursa === 'XML' ? `<div class="tip ${doc.deVerificat ? 'warn' : 'ok'}"><span class="dot"></span><div class="grow"><p><b>Factură ${doc.sursa === 'SPV' ? 'importată automat din SPV' : 'importată din e-Factură'}.</b> ${doc.deVerificat ? 'Verifică contul propus și salvează: ' + e(doc.motivCont || '') : 'Verificată.'}${doc.moneda && doc.moneda !== 'RON' ? ` Valoare în ${e(doc.moneda)}: ${lei(doc.totalValuta)}, curs BNR ${doc.curs ? Number(doc.curs).toFixed(4) : 'indisponibil'}.` : ''}${doc.taxareInversa ? ' Factura are taxare inversă.' : ''}</p></div></div>` : ''}
+      ${doc.sursa === 'extras' ? `<div class="tip warn"><span class="dot"></span><div class="grow"><p><b>Creat din extrasul bancar.</b> Atașează factura furnizorului (PDF-ul primit pe email) și completează numărul ei.</p></div></div>` : ''}
+      ${existent && existent.plata === 'neplatit' ? `<p class="small">${existent.achitat ? `<span class="badge ok">${existent.tip === 'venit' ? 'încasată' : 'plătită'}</span> ${existent.dataPlata ? 'pe ' + dataRo(existent.dataPlata) : ''}` : `<span class="badge">${existent.tip === 'venit' ? 'neîncasată' : 'neplătită'}</span>${existent.platitPartial ? ` · achitat parțial ${lei(existent.platitPartial)} lei` : ''} · plata se înregistrează singură când apare în extras`}</p>` : ''}
       <div id="ai-tips"></div>
       <div class="fields-3">
         <label class="field"><span>Data documentului</span><input type="date" id="data" value="${e(doc.data)}"></label>
-        <label class="field"><span>Tip</span><select id="tipDocument">${['Bon fiscal', 'Factura', 'Chitanta', 'Extras de cont', 'Contract'].map((t) => `<option ${doc.tipDocument === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+        <label class="field"><span>Tip</span><select id="tipDocument">${[...new Set(['Bon fiscal', 'Factura', 'Factura storno', 'Chitanta', 'Plată card', 'Extras de cont', 'Contract', doc.tipDocument].filter(Boolean))].map((t) => `<option ${doc.tipDocument === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="field"><span>Număr</span><input type="text" id="nr" value="${e(doc.nr)}" placeholder="ex. 0045"></label>
       </div>
       <div class="fields-2">
         <label class="field"><span id="lbl-partener">${doc.tip === 'venit' ? 'Client' : 'Furnizor'}</span><input type="text" id="pnume" value="${e(doc.partener?.nume)}" placeholder="Numele firmei"></label>
         <label class="field"><span>CUI</span><div class="row" style="flex-wrap:nowrap"><input type="text" id="pcui" value="${e(doc.partener?.cui)}" placeholder="ex. RO12345678"><button class="btn sm" id="anaf" title="Completează automat din registrul ANAF" ${aiOn ? '' : 'disabled'}>ANAF</button></div></label>
       </div>
-      <label class="field"><span>Ce reprezintă</span><input type="text" id="descriere" value="${e(doc.descriere)}" placeholder="ex. abonament hosting, benzină, laptop"></label>
+      <div class="fields-2"><label class="field"><span>Ce reprezintă</span><input type="text" id="descriere" value="${e(doc.descriere)}" placeholder="ex. abonament hosting, benzină, laptop"></label>
+      <label class="field"><span>Scadența</span><input type="date" id="scadenta" value="${e(doc.scadenta || '')}"><small>Pentru facturi: când trebuie plătită.</small></label></div>
       <div class="fields-3">
         <label class="field"><span>Total de plată (lei)</span><input type="number" step="0.01" id="total" value="${e(doc.total)}" inputmode="decimal"></label>
         ${setari.platitorTVA ? `
@@ -104,7 +121,7 @@ async function editor(main, ctx, id) {
         <div id="file-area"></div>
         <input type="file" id="file" accept="image/*,application/pdf" hidden>
         <input type="file" id="camera" accept="image/*" capture="environment" hidden>
-        ${aiOn ? '' : '<p class="muted small" style="margin:10px 0 0">Conectează asistentul AI în Setări ca datele să fie citite automat din poză.</p>'}
+        ${aiOn ? '' : '<p class="muted small" style="margin:10px 0 0">Fără internet, completează datele de mână. Cu internet, asistentul le citește singur din poză.</p>'}
       </section>
       <section class="panel">
         <h2>Ce se înregistrează</h2>
@@ -125,7 +142,7 @@ async function editor(main, ctx, id) {
     doc.partener = { ...(doc.partener || {}), nume: v('#pnume').value.trim(), cui: v('#pcui').value.trim() };
     doc.descriere = v('#descriere').value.trim(); doc.total = r2(v('#total').value);
     if (setari.platitorTVA) { doc.tvaCota = Number(v('#tvaCota').value); doc.tva = r2(v('#tva').value); doc.tvaDeductibil = Number(v('#tvaDeductibil')?.value ?? 100); }
-    doc.cont = v('#cont').value; doc.plata = v('#plata').value;
+    doc.cont = v('#cont').value; doc.plata = v('#plata').value; doc.scadenta = v('#scadenta').value;
   };
   const calcTVA = () => {
     if (!setari.platitorTVA) return;
@@ -256,6 +273,7 @@ async function editor(main, ctx, id) {
         if (!(await confirma(`În casă sunt doar ${lei(b)} lei. Plata cash de ${lei(doc.total)} lei ar face soldul negativ. Salvezi oricum?`, 'Salvează'))) return;
       }
     }
+    doc.deVerificat = false;
     await withLoad(() => salveazaDocument(doc, setari), ev.currentTarget);
     toast('Document salvat și înregistrat.');
     await ctx.reload();

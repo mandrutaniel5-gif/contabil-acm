@@ -1,7 +1,7 @@
 {
   "name": "acm-contabil",
   "productName": "ACM Contabil",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Contabilitate în partidă dublă pentru ACM CODE SRL, cu asistent AI",
   "author": "ACM CODE SRL",
   "private": true,
@@ -13,8 +13,7 @@
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
-    "test": "node test/engine.test.mjs",
-    "deploy:functions": "cd functions && npm install && cd .. && firebase deploy --only functions"
+    "test": "node test/engine.test.mjs"
   },
   "devDependencies": {
     "@capacitor/android": "^8.6.0",

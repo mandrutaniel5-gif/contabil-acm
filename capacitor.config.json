@@ -4,5 +4,9 @@
   "webDir": "www",
   "server": { "androidScheme": "https", "iosScheme": "capacitor" },
   "ios": { "contentInset": "never" },
-  "android": { "allowMixedContent": false }
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SystemBars": { "insetsHandling": "css", "initialViewportFitValueHint": "cover" },
+    "CapacitorHttp": { "enabled": false }
+  }
 }

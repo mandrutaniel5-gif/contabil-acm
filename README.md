@@ -1,31 +1,40 @@
-# ACM Contabil 1.0.0
+# ACM Contabil 1.1.0
 
 Contabilitate în partidă dublă pentru ACM CODE S.R.L., pentru Windows, Android și iOS, cu asistent AI.
 Este gândită pentru o persoană cu puțină experiență: operațiunile se aleg în cuvinte simple, iar aplicația scrie notele contabile.
 
 ## Ce face
 
-- **Documente**: poză sau PDF pentru bon sau factură. Asistentul citește datele și propune contul, iar nota contabilă se generează automat. Obiectele de inventar trec direct în cheltuială (603 = 303). Cheltuielile de peste 5.000 lei te trimit la planul de amortizare.
-- **Operațiuni**: 18 șabloane pentru încasări, plăți, comisioane, numerar, avansuri, împrumuturi de la administrator, capital social, dividende (cu impozitul de 16%) și plăți de taxe. Există și o notă contabilă manuală pentru cazurile rare.
-- **Registre**: registrul jurnal, balanța de verificare cu 5 egalități, fișa contului, registrul de casă pe zile și mijloacele fixe. Toate se pot tipări și exporta în CSV.
-- **Închiderea lunii**: înregistrează automat amortizarea, regularizarea TVA (4427/4426 → 4423/4424), impozitul micro sau pe profit la final de trimestru și închiderea claselor 6/7 în 121. Se poate rula din nou fără să apară dubluri.
-- **Declarații**:
-  - calendarul termenelor, generat din setările firmei
-  - D100 micro (calcul cumulat) cu indicatorul plafonului de 100.000 €
-  - estimarea impozitului pe profit
-  - D300, pe cote de TVA
-  - SAF-T D406 (schiță XML de validat cu DUKIntegrator)
-  - calculatorul de salariu pentru D112
-- **Indicații automate** (fără AI): termene apropiate, luni neînchise, casă sau bancă cu sold negativ, solduri neobișnuite, plafoane, documente fără fișier și mijloace fixe fără amortizare.
-- **Asistent AI**: un chat care vede soldurile, documentele și termenele firmei și ghidează pas cu pas. Butoanele „Ghidează-mă” de pe ecrane îi trimit întrebarea deja completată.
-- **Date**: totul este stocat local (IndexedDB). Backup-ul este criptat AES-256-GCM, cu cheie derivată prin PBKDF2 (600.000 de iterații).
+**Automat, fără să apeși nimic:**
+- **Facturi din SPV.** Cu firma conectată la SPV, facturile primite și cele emise (din ACM Docs sau din alt program) intră singure în Documente, cu PDF-ul și XML-ul ANAF și cu contul propus.
+- **Extrase bancare.** CSV, MT940, CAMT.053 sau PDF, de la orice bancă. Plățile se potrivesc cu facturile după sumă, nume, CUI, numărul facturii și IBAN. Cele sigure se înregistrează singure: încasări, plăți, comisioane, dobânzi, numerar, taxe la ANAF.
+- **Închiderea lunilor.** Amortizarea, regularizarea TVA, impozitul trimestrial și închiderea claselor 6/7 se refac singure când se modifică o lună trecută.
+- **Anul nou.** Soldurile se preiau automat, iar rezultatul trece din 121 în 1171 la 1 ianuarie.
+- **Curs BNR.** Se ia zilnic. Facturile în valută se convertesc la cursul zilei facturii, iar plafonul micro folosește cursul din 31 decembrie.
+- **Sincronizare criptată.** Calculatorul, telefonul și iPhone-ul au aceleași date, fără cont. Asocierea se face prin cod QR.
+- **Verificări.** Termene, documente de verificat, tranzacții neidentificate, restanțe, plafoane, solduri neobișnuite.
 
-Valorile fiscale din 2026 sunt editabile din Setări → Regim fiscal:
-- micro 1%, plafon 100.000 €
-- impozit pe profit 16%
-- TVA 21% / 11%, plafon de scutire 395.000 lei
-- mijloc fix de la 5.000 lei
-- impozit pe dividende 16%
+**Ecrane:**
+- **Acasă:** banii firmei, rezultatul, impozitul estimat, ce ai de făcut, termenele și starea automatizărilor.
+- **Documente:** poză sau PDF pentru bonuri și facturi (le citește AI-ul), import de e-Facturi ZIP/XML, filtrul „de verificat”.
+- **Bancă:** importul extraselor și confirmarea, cu un buton, a tranzacțiilor nesigure.
+- **Operațiuni:** 18 operațiuni frecvente fără factură și nota contabilă manuală.
+- **Parteneri:** sold pe client și furnizor, restanțe, fișa partenerului, verificare la ANAF.
+- **Registre:** jurnal, balanță, fișa contului, registrul de casă, jurnalele de TVA, mijloacele fixe, închiderea lunii, registrul-inventar, situațiile financiare (bilanț + cont de profit și pierdere) și închiderea anului (cu rezerva legală).
+- **Declarații:** calendarul, D100, impozitul pe profit, D300, SAF-T D406 (XML) și salarii (D112).
+- **Formulare:** chitanță, dispoziție de plată/încasare, decont, ordin de deplasare cu diurnă, proces-verbal de punere în funcțiune, hotărârea asociatului unic. Fiecare se tipărește și se înregistrează singur.
+- **Ghid:** ce face fiecare ecran, ce se întâmplă automat și ce rămâne de făcut de mână.
+- **Asistent AI:** vede soldurile și documentele firmei și răspunde concret.
+
+**Ce nu se poate automatiza:**
+- Depunerea declarațiilor. ANAF cere semnătura electronică; aplicația calculează sumele și generează SAF-T.
+- Emiterea facturilor. Se face din ACM Docs.
+- Semnătura pe situațiile anuale.
+
+## Server și date
+
+- **Date:** stau local pe fiecare dispozitiv (IndexedDB). Opțional, se sincronizează criptat end-to-end în Firestore, în proiectul `acm-contabil` (plan Spark): cheie AES-256-GCM derivată HKDF dintr-un secret de 256 de biți generat pe dispozitiv. Regulile sunt în `firestore.rules`. Autentificarea e anonimă.
+- **Server:** asistentul AI, CUI-ul și conectarea la SPV rulează ca funcții în proiectul ACM Docs (`contabilAi`, `contabilCui`, `contabilAnaf*`). Folosesc același client OAuth ANAF și același callback. Cheia Claude e secretul GitHub `ANTHROPIC_API_KEY` din repo-ul ACM Docs.
 
 ## Pornire rapidă (browser)
 
@@ -33,22 +42,6 @@ Valorile fiscale din 2026 sunt editabile din Setări → Regim fiscal:
 npm run serve        # http://localhost:5173
 npm test             # testele motorului contabil
 ```
-
-## Asistentul AI (Firebase + Claude)
-
-1. Creează un proiect Firebase (plan Blaze) și activează **Authentication → Email/Password**. Creează contul persoanei care ține contabilitatea și confirmă-i emailul.
-2. `firebase use --add` (alegi proiectul), apoi:
-   ```bash
-   firebase functions:secrets:set ANTHROPIC_API_KEY
-   echo "ALLOWED_EMAILS=email@firma.ro" > functions/.env
-   npm run deploy:functions
-   ```
-3. În aplicație, mergi la Setări → Asistent AI:
-   - Adresa funcțiilor: `https://europe-west1-<proiect>.cloudfunctions.net`
-   - Cheia web Firebase
-   - Email și parolă → Conectează
-
-Funcția `ai` verifică token-ul Firebase, emailul confirmat și lista `ALLOWED_EMAILS`. Cheia Claude nu ajunge niciodată pe dispozitiv. Funcția `cui` caută firme după CUI în registrul public ANAF.
 
 ## Build pe calculatorul tău (Windows)
 
@@ -76,7 +69,7 @@ Workflow-ul pornește doar manual, nu la fiecare push.
 - Bilanțul anual și declarațiile trebuie semnate de un contabil autorizat sau expert contabil dacă administratorul nu are studii economice.
 - SAF-T: XML-ul urmează structura D406, dar trebuie validat în DUKIntegrator înainte de depunere. Secțiunea SourceDocuments nu este inclusă.
 - D300: operațiunile intracomunitare și taxarea inversă (ex. servicii cloud din UE/SUA) nu sunt calculate automat.
-- Nu are module de facturare sau e-Factura. Facturile emise se înregistrează ca documente (pot veni din ACM Docs).
+- Facturile se emit din ACM Docs; aici intră singure din SPV.
 - Sumele în valută se introduc în lei, la cursul BNR din ziua documentului.
 - Termenele se mută peste weekend, dar nu peste sărbătorile legale.
 - Salarii: există doar un calculator; statul de plată complet lipsește.

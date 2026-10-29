@@ -1,7 +1,11 @@
 // Bază de date locală (IndexedDB). Datele stau pe dispozitiv; backup criptat din Setări.
 const DB_NAME = 'acm-contabil';
-const VERSION = 1;
-export const STORES = ['settings', 'note', 'documente', 'parteneri', 'mijloace', 'chat'];
+const VERSION = 2;
+export const STORES = ['settings', 'note', 'documente', 'parteneri', 'mijloace', 'chat', 'extrase', 'meta'];
+// Ce se sincronizează în seiful criptat. 'meta' și setările locale (sesiuni, chei de dispozitiv) nu pleacă.
+export const SYNC_STORES = ['settings', 'note', 'documente', 'parteneri', 'mijloace', 'extrase'];
+const LOCAL_ONLY = { settings: new Set(['aiSession', 'device']) };
+export const esteSincronizat = (store, id) => SYNC_STORES.includes(store) && !(LOCAL_ONLY[store] && LOCAL_ONLY[store].has(id));
 
 let dbp = null;
 function open() {
@@ -28,11 +32,16 @@ function tx(store, mode, fn) {
   }));
 }
 
+// Ascultători de modificări (sincronizarea marchează înregistrările de trimis). opts.remote = venit din seif.
+const listeners = new Set();
+export const onChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
+const notify = (store, id, deleted, opts) => { for (const f of listeners) { try { f(store, id, deleted, opts || {}); } catch (e) { console.error(e); } } };
+
 export const db = {
   get: (store, id) => tx(store, 'readonly', (s) => s.get(id)),
   all: (store) => tx(store, 'readonly', (s) => s.getAll()),
-  put: (store, obj) => tx(store, 'readwrite', (s) => { s.put(obj); return obj; }),
-  del: (store, id) => tx(store, 'readwrite', (s) => s.delete(id)),
+  put: async (store, obj, opts) => { const r = await tx(store, 'readwrite', (s) => { s.put(obj); return obj; }); notify(store, obj.id, false, opts); return r; },
+  del: async (store, id, opts) => { const r = await tx(store, 'readwrite', (s) => s.delete(id)); notify(store, id, true, opts); return r; },
   clear: (store) => tx(store, 'readwrite', (s) => s.clear()),
   async dump() {
     const out = {};

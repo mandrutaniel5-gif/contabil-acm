@@ -110,4 +110,98 @@ await t('Termene și dividende', async () => {
   assert.equal(sal.net, 4050 - 1013 - 405 - 263);
 });
 
+
+
+// ---------------- Extrase bancare și potrivire automată ----------------
+const X = await import('../www/js/extrase.js');
+await t('Extras CSV (format românesc) + potrivire automată cu facturile', async () => {
+  const s = await reset({ regim: 'micro', platitorTVA: false, administrator: 'Mândruț Aniel-Ionatan', cui: '51234567' });
+  await E.salveazaDocument({ id: 'f1', tip: 'venit', data: '2026-09-02', nr: 'ACM-0012', total: 4500, cont: '704', plata: 'neplatit', partener: { nume: 'Cinema Palace SRL', cui: 'RO40112233' } }, s);
+  await E.salveazaDocument({ id: 'f2', tip: 'cheltuiala', data: '2026-09-05', nr: 'HST771', total: 119.5, cont: '628', plata: 'neplatit', partener: { nume: 'Hosterion SRL', cui: '20198340' } }, s);
+  const csv = '﻿Data tranzactie;Descriere;Debit;Credit;Beneficiar/Ordonator\n'
+    + '10.09.2026;Plata factura ACM-0012;;4.500,00;CINEMA PALACE SRL\n'
+    + '11.09.2026;OP factura HST771;119,50;;HOSTERION SRL\n'
+    + '30.09.2026;Comision administrare cont;12,00;;\n'
+    + '15.09.2026;Retragere numerar ATM;500,00;;\n'
+    + '20.09.2026;Transfer;1.000,00;;MANDRUT ANIEL-IONATAN\n'
+    + '22.09.2026;GOOGLE *Workspace;54,00;;GOOGLE\n'
+    + '25.09.2026;Plata necunoscuta;77,00;;SC XYZ\n';
+  const f = { name: 'extras.csv', type: 'text/csv', arrayBuffer: async () => new TextEncoder().encode(csv).buffer };
+  const r = await X.citesteFisier(f);
+  assert.equal(r.tranzactii.length, 7);
+  eq(r.tranzactii[0].suma, 4500, 'sumă credit'); eq(r.tranzactii[1].suma, -119.5, 'sumă debit');
+  const res = await X.importa({ banca: 'BT', tranzactii: r.tranzactii });
+  assert.equal(res.total, 7);
+  const ex = (await db.all('extrase'))[0];
+  const st = Object.fromEntries(ex.tranzactii.map((x) => [x.detalii.slice(0, 12), x.stare]));
+  assert.equal(st['Plata factur'], 'inregistrat');
+  assert.equal(st['OP factura H'], 'inregistrat');
+  assert.equal(st['Comision adm'], 'inregistrat');
+  assert.equal(st['Retragere nu'], 'inregistrat');
+  assert.equal(st['Transfer'], 'propus');           // administratorul: cere confirmare
+  assert.equal(st['GOOGLE *Work'], 'propus');       // card, fără factură: cere confirmare
+  assert.equal(st['Plata necuno'], 'neclar');
+  assert.ok((await db.get('documente', 'f1')).achitat, 'factura client marcată încasată');
+  assert.ok((await db.get('documente', 'f2')).achitat, 'factura furnizor marcată plătită');
+  // reimportul aceluiași extras nu dublează nimic
+  const res2 = await X.importa({ banca: 'BT', tranzactii: (await X.citesteFisier(f)).tranzactii });
+  assert.equal(res2.total, 0);
+  // confirmarea plății Google creează cheltuiala de verificat
+  const g = ex.tranzactii.find((x) => x.detalii.startsWith('GOOGLE'));
+  await X.confirma(ex.id, g.id);
+  const docG = (await db.all('documente')).find((d) => d.extrasTx === g.id);
+  assert.ok(docG && docG.deVerificat && docG.cont === '628');
+  const note = await E.toateNotele();
+  const b = E.balanta(note, s, '2026-09-01', '2026-09-30');
+  const r5121 = b.rows.find((x) => x.cod === '5121');
+  eq(r5121.sfd - r5121.sfc, 4500 - 119.5 - 12 - 500 - 54, 'sold bancă după extras');
+  eq(b.tot.sfd, b.tot.sfc, 'balanță echilibrată');
+});
+
+await t('Extras MT940', async () => {
+  const mt = ':20:STMT\n:25:RO49AAAA1B31007593840000\n:60F:C260901RON1000,00\n:61:2609100910C250,00NTRFNONREF\n:86:Incasare de la Client SRL\n:61:2609120912D15,50NMSCNONREF\n:86:Comision\n:62F:C260930RON1234,50\n';
+  const r = await X.citesteFisier({ name: 'x.sta', type: '', arrayBuffer: async () => new TextEncoder().encode(mt).buffer });
+  assert.equal(r.tranzactii.length, 2);
+  eq(r.tranzactii[0].suma, 250, 'credit'); eq(r.tranzactii[1].suma, -15.5, 'debit');
+  assert.equal(r.tranzactii[0].data, '2026-09-10');
+});
+
+await t('Numere și date din extrase', async () => {
+  eq(X.numar('1.234,56'), 1234.56, 'ro'); eq(X.numar('1,234.56'), 1234.56, 'en'); eq(X.numar('-12,5'), -12.5, 'neg'); eq(X.numar('(80.00)'), -80, 'paranteze');
+  assert.equal(X.dataISO('05.03.2026'), '2026-03-05'); assert.equal(X.dataISO('2026-03-05T10:00'), '2026-03-05'); assert.equal(X.dataISO('20260305'), '2026-03-05');
+});
+
+// ---------------- Situații financiare, reportare automată ----------------
+const SF = await import('../www/js/situatii.js');
+await t('Situații financiare și reportarea în anul nou', async () => {
+  const s = await reset({ regim: 'micro', platitorTVA: false });
+  const op = (id) => E.OPERATII.find((o) => o.id === id);
+  await E.salveazaNota({ data: '2025-01-10', explicatie: 'Capital', linii: op('capital').linii(1000) });
+  await E.salveazaDocument({ tip: 'venit', data: '2025-03-01', total: 20000, cont: '704', plata: 'banca' }, s);
+  await E.salveazaDocument({ tip: 'cheltuiala', data: '2025-03-05', total: 2000, cont: '628', plata: 'banca' }, s);
+  for (let l = 1; l <= 12; l++) await E.inchideLuna(2025, l);
+  const note = await E.toateNotele();
+  const sf = SF.situatiiFinanciare(note, s, 2025);
+  eq(sf.verificare, 0, 'bilanțul se închide');
+  const cpp = Object.fromEntries(sf.cpp.map(([n, v]) => [n, v]));
+  eq(cpp['Cifra de afaceri netă'], 20000, 'cifra de afaceri'); eq(cpp['Impozit pe profit / pe venit'], 200, 'impozit micro 1%');
+  eq(sf.net, 20000 - 2000 - 200, 'profit net');
+  // soldurile anului 2025 trec automat în 2026
+  const b26 = E.balanta(note, s, '2026-01-01', '2026-01-31');
+  const banca = b26.rows.find((x) => x.cod === '5121');
+  eq(banca.sid, 1000 + 20000 - 2000, 'sold inițial 2026 preluat automat');
+  eq(b26.tot.sid, b26.tot.sic, 'solduri inițiale echilibrate');
+});
+
+const F = await import('../www/js/v-formulare.js').catch(() => null);
+await t('Suma în litere', async () => {
+  const { inLitere } = F || (await import('../www/js/v-formulare.js'));
+  assert.equal(inLitere(1), 'un leu');
+  assert.equal(inLitere(2), 'doi lei');
+  assert.equal(inLitere(21), 'douăzeci și unu de lei');
+  assert.equal(inLitere(100), 'o sută de lei');
+  assert.equal(inLitere(1250.5), 'o mie două sute cincizeci de lei și cincizeci de bani');
+  assert.equal(inLitere(2019), 'două mii nouăsprezece lei');
+});
+
 console.log(`\n${ok} teste trecute.`);

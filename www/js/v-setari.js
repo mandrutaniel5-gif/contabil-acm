@@ -4,17 +4,22 @@ import { saveSetari, reguli, lei, r2 } from './engine.js';
 import { cont, toateConturile } from './conturi.js';
 import { RULES_2026 } from './rules.js';
 import * as ai from './ai.js';
+import * as sync from './sync.js';
+import * as anaf from './anaf.js';
+import * as auto from './auto.js';
+import { qrSVG, scaneaza } from './qr.js';
+import { areHttpNativ, platforma } from './host.js';
 import { VERSIUNE } from './version.js';
 
 export async function render(main, ctx, params) {
   const sec = params[0] || 'firma';
-  const SECT = [['firma', 'Firma'], ['fiscal', 'Regim fiscal'], ['solduri', 'Solduri inițiale'], ['ai', 'Asistent AI'], ['date', 'Date și backup'], ['aspect', 'Aspect']];
+  const SECT = [['firma', 'Firma'], ['fiscal', 'Regim fiscal'], ['sync', 'Dispozitive'], ['spv', 'SPV / e-Factura'], ['auto', 'Automatizări'], ['solduri', 'Solduri inițiale'], ['date', 'Backup'], ['aspect', 'Aspect']];
   main.innerHTML = `
   <div class="page-head"><div><h1>Setări</h1><p class="sub">ACM Contabil ${VERSIUNE}</p></div></div>
   <div class="seg" style="margin-bottom:16px">${SECT.map(([k, l]) => `<button data-go="#setari/${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>
   <section class="panel" style="max-width:820px" id="sv"></section>`;
   const sv = $('#sv', main);
-  await ({ firma, fiscal, solduri, ai: vAI, date, aspect }[sec] || firma)(sv, ctx);
+  await ({ firma, fiscal, solduri, sync: vSync, spv: vSpv, auto: vAuto, date, aspect }[sec] || firma)(sv, ctx);
 }
 
 async function salveaza(ctx, patch, btn) {
@@ -37,6 +42,7 @@ function firma(el, ctx) {
       <label class="field"><span>IBAN</span><input type="text" id="iban" value="${e(s.iban)}"></label>
       <label class="field"><span>Banca</span><input type="text" id="banca" value="${e(s.banca)}"></label>
     </div>
+    <label class="field"><span>Numele administratorului</span><input type="text" id="administrator" value="${e(s.administrator || '')}" placeholder="ex. Mândruț Aniel-Ionatan"><small>Apare pe formulare și ajută la recunoașterea în extras a banilor puși sau scoși de administrator.</small></label>
     <div class="row end"><button class="btn primary" id="save">Salvează</button></div>`;
   const v = (x) => $(x, el);
   v('#anaf').onclick = async (ev) => {
@@ -46,7 +52,7 @@ function firma(el, ctx) {
       toast(r.platitorTVA ? 'Date preluate. ANAF arată firma ca plătitoare de TVA — verifică în Regim fiscal.' : 'Date preluate de la ANAF.');
     } catch (err) { toast(err.message); }
   };
-  v('#save').onclick = (ev) => salveaza(ctx, Object.fromEntries(['nume', 'cui', 'regCom', 'localitate', 'adresa', 'iban', 'banca'].map((k) => [k, v('#' + k).value.trim()])), ev.currentTarget);
+  v('#save').onclick = (ev) => salveaza(ctx, Object.fromEntries(['nume', 'cui', 'regCom', 'localitate', 'adresa', 'iban', 'banca', 'administrator'].map((k) => [k, v('#' + k).value.trim()])), ev.currentTarget);
 }
 
 function fiscal(el, ctx) {
@@ -126,30 +132,115 @@ function solduri(el, ctx) {
   v('#save').onclick = (ev) => salveaza(ctx, { soldInitial: si }, ev.currentTarget);
 }
 
-async function vAI(el, ctx) {
-  const s = ctx.setari;
-  const on = await ai.conectat();
-  const sess = await db.get('settings', 'aiSession');
-  el.innerHTML = `<h2>Asistent AI</h2>
-    <p class="muted" style="margin-top:-6px">Asistentul citește bonurile și facturile, propune contul potrivit, explică pașii și verifică luna. Rulează pe Claude, printr-o funcție Firebase a firmei — cheia AI nu se află pe dispozitiv.</p>
-    ${on ? `<div class="tip ok"><span class="dot"></span><div class="grow"><p>Conectat ca <b>${e(sess.email)}</b>.</p><div class="act"><button class="btn sm ghost" id="logout">Deconectează</button></div></div></div>` : ''}
-    <label class="field"><span>Adresa funcțiilor</span><input type="url" id="functionUrl" value="${e(s.ai.functionUrl)}" placeholder="https://europe-west1-PROIECT.cloudfunctions.net"><small>Din consola Firebase → Functions. Aplicația apelează /ai și /cui.</small></label>
-    <label class="field"><span>Cheia web Firebase</span><input type="text" id="firebaseApiKey" value="${e(s.ai.firebaseApiKey)}" placeholder="AIza…"><small>Setări proiect → General → Web API Key. Este o cheie publică; accesul e controlat de cont.</small></label>
-    ${on ? '' : `<hr class="sep"><h3>Cont</h3><div class="fields-2">
-      <label class="field"><span>Email</span><input type="email" id="email" value="${e(s.ai.email)}" autocomplete="username"></label>
-      <label class="field"><span>Parolă</span><input type="password" id="pass" autocomplete="current-password"></label></div>`}
-    <div class="row end"><button class="btn" id="save">Salvează</button>${on ? '' : '<button class="btn primary" id="login">Conectează</button>'}</div>`;
+async function vSync(el, ctx) {
+  const st = await sync.stare();
+  const asteapta = await sync.inAsteptare();
+  if (!st) {
+    el.innerHTML = `<h2>Sincronizare între dispozitive</h2>
+      <p class="muted" style="margin-top:-6px;max-width:62ch">Ține aceeași contabilitate pe calculator, telefon și iPhone, fără cont. Datele se criptează pe dispozitiv înainte de a pleca. Serverul păstrează doar text criptat, pe care nu îl poate citi nimeni, nici dezvoltatorul aplicației.</p>
+      <div class="grid g2">
+        <div class="tip"><span class="dot"></span><div class="grow"><p><b>E primul dispozitiv?</b> Creează seiful. Datele de pe acest dispozitiv se urcă criptat, iar apoi poți adăuga celelalte dispozitive.</p><div class="act"><button class="btn sm primary" id="creeaza">Creează seiful</button></div></div></div>
+        <div class="tip"><span class="dot"></span><div class="grow"><p><b>Ai deja seiful pe alt dispozitiv?</b> Acolo deschide Setări → Dispozitive și scanează codul QR sau copiază codul de asociere.</p><div class="act row"><button class="btn sm" id="scan">Scanează codul QR</button><button class="btn sm ghost" id="manual">Introdu codul</button></div></div></div>
+      </div>
+      <div id="asoc" hidden style="margin-top:14px"></div>`;
+    const v = (x) => $(x, el);
+    v('#creeaza').onclick = async (ev) => {
+      try { await withLoad(() => sync.creeazaSeif(), ev.currentTarget); toast('Seiful a fost creat. Datele se sincronizează criptat.'); await ctx.reload(); }
+      catch (err) { toast(err.message); }
+    };
+    const asoc = async (text, btn) => {
+      try { const r = await withLoad(() => sync.asociaza(text), btn); toast(`Dispozitiv asociat. Am primit ${r.primite || 0} înregistrări.`); await ctx.reload(); }
+      catch (err) { toast(err.message); }
+    };
+    v('#manual').onclick = () => {
+      v('#asoc').hidden = false;
+      v('#asoc').innerHTML = `<label class="field"><span>Codul de asociere</span><input type="text" id="cod" placeholder="ACMC1-…" autocomplete="off" autocapitalize="off" spellcheck="false"></label><div class="row end"><button class="btn primary" id="ok">Asociază</button></div>`;
+      v('#ok').onclick = (ev) => asoc(v('#cod').value, ev.currentTarget);
+    };
+    v('#scan').onclick = async () => {
+      v('#asoc').hidden = false;
+      v('#asoc').innerHTML = `<video id="vid" style="width:100%;max-width:420px;border-radius:14px;background:#000;aspect-ratio:4/3;object-fit:cover"></video><p class="muted small">Îndreaptă camera spre codul QR de pe celălalt dispozitiv.</p><button class="btn sm" id="stop">Oprește camera</button>`;
+      const ac = new AbortController();
+      v('#stop').onclick = () => { ac.abort(); v('#asoc').hidden = true; };
+      try { const text = await scaneaza(v('#vid'), { semnal: ac.signal }); v('#asoc').hidden = true; await asoc(text); }
+      catch (err) { if (err.message !== 'anulat') toast(err.message); }
+    };
+    return;
+  }
+  const cod = sync.codAsociere(st);
+  el.innerHTML = `<h2>Sincronizare între dispozitive</h2>
+    <div class="tip ${st.eroare ? 'err' : 'ok'}"><span class="dot"></span><div class="grow"><p>${st.eroare ? e(st.eroare) : `Seif activ. Ultima sincronizare: ${st.ultima ? new Date(st.ultima).toLocaleString('ro-RO') : 'încă nu'}.`}${asteapta ? ` ${asteapta} modificări așteaptă să fie trimise.` : ''}</p>
+      <div class="act"><button class="btn sm ghost" id="acum">Sincronizează acum</button></div></div></div>
+    <h3 style="margin-top:16px">Adaugă un dispozitiv</h3>
+    <p class="muted small" style="margin-top:0">Pe celălalt dispozitiv: Setări → Dispozitive → Scanează codul QR. Codul dă acces complet la contabilitate: arată-l doar dispozitivelor tale.</p>
+    <div class="row" style="align-items:flex-start;gap:20px">
+      <div id="qr" style="border-radius:14px;overflow:hidden;border:1px solid var(--line);line-height:0;background:#fff" hidden></div>
+      <div class="grow" style="min-width:220px">
+        <button class="btn" id="arata">${icon('lock')}Arată codul QR</button>
+        <div id="codtxt" hidden style="margin-top:10px"><label class="field"><span>Sau copiază codul de asociere</span><input type="text" readonly value="${e(cod)}" id="codin"></label><button class="btn sm" id="copiaza">Copiază</button></div>
+      </div>
+    </div>
+    <hr class="sep">
+    <h3>Scoate acest dispozitiv din seif</h3>
+    <p class="muted small">Datele rămân pe acest dispozitiv și în seif, dar nu se mai sincronizează aici.</p>
+    <button class="btn danger" id="iesi">Scoate dispozitivul</button>`;
   const v = (x) => $(x, el);
-  const aiPatch = () => ({ ai: { ...s.ai, functionUrl: v('#functionUrl').value.trim(), firebaseApiKey: v('#firebaseApiKey').value.trim(), email: v('#email')?.value.trim() || s.ai.email } });
-  v('#save').onclick = (ev) => salveaza(ctx, aiPatch(), ev.currentTarget);
-  v('#login') && (v('#login').onclick = async (ev) => {
+  v('#arata').onclick = () => {
+    const ascuns = v('#qr').hidden;
+    v('#qr').hidden = !ascuns; v('#codtxt').hidden = !ascuns;
+    v('#qr').innerHTML = ascuns ? qrSVG(sync.textQR(st), 220) : '';
+    v('#arata').innerHTML = `${icon('lock')}${ascuns ? 'Ascunde codul' : 'Arată codul QR'}`;
+  };
+  v('#copiaza').onclick = async () => { try { await navigator.clipboard.writeText(cod); toast('Cod copiat. Șterge-l din clipboard după ce l-ai folosit.'); } catch { v('#codin').select(); } };
+  v('#acum').onclick = async (ev) => { try { const r = await withLoad(() => sync.sincronizeaza(), ev.currentTarget); toast(`Sincronizat: ${r.trimise || 0} trimise, ${r.primite || 0} primite.`); await ctx.reload(); } catch (err) { toast(err.message); } };
+  v('#iesi').onclick = async () => { if (!(await confirma('Scoți acest dispozitiv din seif? Datele locale rămân, dar nu se mai sincronizează.', 'Scoate'))) return; await sync.iesiDinSeif(); toast('Dispozitivul a fost scos din seif.'); await ctx.reload(); };
+}
+
+async function vSpv(el, ctx) {
+  const st = await anaf.stare();
+  const meta = (await db.get('meta', 'spv')) || {};
+  const nativ = areHttpNativ();
+  el.innerHTML = `<h2>SPV și e-Factura</h2>
+    <p class="muted" style="margin-top:-6px;max-width:64ch">Cu firma conectată, aplicația ia singură din SPV facturile primite de la furnizori și pe cele emise, cu XML-ul și PDF-ul ANAF. Le înregistrează ca documente și îți propune contul. ANAF păstrează mesajele 60 de zile, așa că aplicația verifică la fiecare câteva ore.</p>
+    ${!nativ ? '<div class="tip warn"><span class="dot"></span><div class="grow"><p>Conectarea la ANAF merge doar din aplicația instalată (Windows, Android, iPhone), nu din browser.</p></div></div>' : ''}
+    ${st ? `<div class="tip ok"><span class="dot"></span><div class="grow"><p>Firma este conectată${st.cif ? ` (CUI ${e(st.cif)})` : ''} din ${new Date(st.conectat || st.at).toLocaleDateString('ro-RO')}. Conectarea expiră după un an; aplicația îți amintește din timp.</p>
+         <p class="small muted">${meta.ultima ? `Ultima verificare: ${new Date(meta.ultima).toLocaleString('ro-RO')}.` : 'Încă nu s-a verificat.'}${meta.ultimRezultat ? ` Ultimul import: ${meta.ultimRezultat.primite} primite, ${meta.ultimRezultat.emise} emise.` : ''}</p>
+         <div class="act row"><button class="btn sm primary" id="acum" ${nativ ? '' : 'disabled'}>Verifică SPV acum</button><button class="btn sm ghost danger" id="deco">Deconectează</button></div></div></div>`
+      : `<div class="tip"><span class="dot"></span><div class="grow"><p>Ai nevoie de certificatul digital calificat al firmei (sau al administratorului, înregistrat în SPV pentru firmă), pus în calculator sau pe token.</p><div class="act"><button class="btn sm primary" id="con" ${nativ ? '' : 'disabled'}>Conectează firma la SPV</button></div></div></div>`}
+    <div id="pas"></div>
+    ${(meta.respinse || []).length ? `<h3 style="margin-top:16px">Facturi respinse de ANAF</h3><ul class="list">${meta.respinse.map((r) => `<li><div class="grow"><div class="t">${e(r.detalii || 'Factură respinsă')}</div><div class="m">${e(String(r.data || ''))}</div></div></li>`).join('')}</ul>` : ''}`;
+  const v = (x) => $(x, el);
+  v('#con') && (v('#con').onclick = async (ev) => {
+    if (!ctx.setari.cui) { toast('Completează întâi CUI-ul firmei în Setări → Firma.'); return; }
     try {
-      await saveSetari({ ...s, ...aiPatch() });
-      const mail = await withLoad(() => ai.login(v('#email').value.trim(), v('#pass').value), ev.currentTarget);
-      toast(`Conectat ca ${mail}.`); await ctx.reload();
-    } catch (err) { toast(err.message); }
+      await withLoad(() => anaf.conecteaza((p) => { if (p === 'asteapta') v('#pas').innerHTML = '<div class="tip"><span class="dot"></span><div class="grow"><p>S-a deschis pagina ANAF. Alege certificatul firmei, apoi întoarce-te aici. Aștept confirmarea…</p></div></div>'; }), ev.currentTarget);
+      toast('Firma este conectată la SPV. Importul pornește acum.');
+      await auto.ruleazaAcum();
+      await ctx.reload();
+    } catch (err) { v('#pas').innerHTML = ''; toast(err.message); }
   });
-  v('#logout') && (v('#logout').onclick = async () => { await ai.logout(); toast('Deconectat.'); await ctx.reload(); });
+  v('#acum') && (v('#acum').onclick = async (ev) => {
+    try { const r = await withLoad(() => anaf.importa(), ev.currentTarget); toast(`SPV: ${r.primite || 0} facturi primite, ${r.emise || 0} emise${r.erori ? `, ${r.erori} respinse` : ''}.`); await ctx.reload(); }
+    catch (err) { toast(err.message); }
+  });
+  v('#deco') && (v('#deco').onclick = async () => { if (!(await confirma('Deconectezi firma de la SPV? Facturile deja importate rămân.', 'Deconectează'))) return; await anaf.deconecteaza(); toast('Firma a fost deconectată de la SPV.'); await ctx.reload(); });
+}
+
+async function vAuto(el, ctx) {
+  const s = ctx.setari;
+  const j = auto.ultimele();
+  el.innerHTML = `<h2>Automatizări</h2>
+    <p class="muted" style="margin-top:-6px">Ce face aplicația singură, cât timp e deschisă pe oricare dintre dispozitive.</p>
+    <label class="check"><input type="checkbox" id="inchidereAutomata" ${s.inchidereAutomata !== false ? 'checked' : ''}><span><b>Închide lunile automat</b><br><span class="muted small">Amortizarea, TVA-ul, impozitul trimestrial și închiderea conturilor 6/7 se refac singure când apare un document nou într-o lună trecută.</span></span></label>
+    <label class="check"><input type="checkbox" id="extrasAutomat" ${s.extrasAutomat !== false ? 'checked' : ''}><span><b>Înregistrează singur plățile sigure din extras</b><br><span class="muted small">Încasările și plățile potrivite clar cu o factură, comisioanele, dobânzile, retragerile de numerar. Restul îți cer confirmarea.</span></span></label>
+    <label class="check"><input type="checkbox" checked disabled><span><b>Curs BNR zilnic</b><br><span class="muted small">Pentru facturile în valută și pentru plafonul micro (cursul din 31 decembrie).</span></span></label>
+    <label class="check"><input type="checkbox" checked disabled><span><b>Reportarea rezultatului la 1 ianuarie</b><br><span class="muted small">Profitul sau pierderea anului trecut trece automat din 121 în 1171, iar soldurile se preiau în anul nou.</span></span></label>
+    <div class="row end"><button class="btn primary" id="save">Salvează</button><button class="btn" id="acum">Rulează acum</button></div>
+    <h3 style="margin-top:18px">Jurnal</h3>
+    ${j.length ? `<ul class="list">${j.map((x) => `<li><div class="grow"><div class="${x.tip === 'eroare' ? '' : ''}">${e(x.text)}</div><div class="m">${new Date(x.t).toLocaleString('ro-RO')}</div></div>${x.tip === 'eroare' ? '<span class="badge err">eroare</span>' : x.tip === 'ok' ? '<span class="badge ok">gata</span>' : ''}</li>`).join('')}</ul>` : '<p class="muted">Nicio acțiune automată în această sesiune încă.</p>'}`;
+  const v = (x) => $(x, el);
+  v('#save').onclick = (ev) => salveaza(ctx, { inchidereAutomata: v('#inchidereAutomata').checked, extrasAutomat: v('#extrasAutomat').checked }, ev.currentTarget);
+  v('#acum').onclick = async (ev) => { await withLoad(() => auto.ruleazaAcum(), ev.currentTarget); toast('Automatizările au rulat.'); await ctx.reload(); };
 }
 
 function date(el, ctx) {

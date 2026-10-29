@@ -2,6 +2,8 @@ import { e, icon } from './ui.js';
 import { balanta, lei, LUNI, trimDinLuna, rulajeClasa, dataRo, iso } from './engine.js';
 import { d100Micro, estimareProfit, termene, zilePana } from './declaratii.js';
 import { indicatii } from './indicatii.js';
+import * as auto from './auto.js';
+import { areHttpNativ } from './host.js';
 
 export async function render(main, ctx) {
   const { note, setari, documente } = ctx;
@@ -49,6 +51,16 @@ export async function render(main, ctx) {
       <section class="panel">
         <h2>Termene</h2>
         ${tm.length ? `<ul class="list">${tm.map((x) => { const z = zilePana(x.termen); return `<li><div class="grow"><div class="t">${e(x.nume)}</div><div class="m">Pentru ${e(x.perioada)} · ${dataRo(iso(x.termen))}</div></div><span class="badge ${z <= 5 ? 'err' : z <= 14 ? 'warn' : ''}">${z === 0 ? 'azi' : z < 0 ? 'depășit' : `${z} zile`}</span></li>`; }).join('')}</ul>` : '<p class="muted">Niciun termen în următoarele 3 luni.</p>'}
+      </section>
+      <section class="panel">
+        <h2>Automat</h2>
+        <ul class="list">
+          <li><div class="grow"><div class="t">Sincronizare</div><div class="m">${ctx.seif ? (ctx.seif.eroare ? e(ctx.seif.eroare) : ctx.seif.ultima ? 'Ultima: ' + new Date(ctx.seif.ultima).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' }) : 'Pornită') : 'Doar pe acest dispozitiv'}</div></div>${ctx.seif ? `<span class="badge ${ctx.seif.eroare ? 'err' : 'ok'}">${ctx.seif.eroare ? 'eroare' : 'criptat'}</span>` : '<button class="btn sm ghost" data-go="#setari/sync">Pornește</button>'}</li>
+          <li><div class="grow"><div class="t">Facturi din SPV</div><div class="m">${ctx.anaf ? (ctx.spv?.ultima ? 'Verificat ' + new Date(ctx.spv.ultima).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' }) : 'Conectat') : areHttpNativ() ? 'Neconectat' : 'Doar în aplicația instalată'}</div></div>${ctx.anaf ? '<span class="badge ok">conectat</span>' : '<button class="btn sm ghost" data-go="#setari/spv">Conectează</button>'}</li>
+          <li><div class="grow"><div class="t">Curs EUR pentru plafonul micro</div><div class="m">${setari.cursAn ? `BNR 31.12.${setari.cursAn}` : 'Implicit, până la prima actualizare'}</div></div><div class="num">${Number(setari.cursEUR).toFixed(4)}</div></li>
+          <li><div class="grow"><div class="t">Închiderea lunilor</div><div class="m">${setari.inchidereAutomata === false ? 'Manuală' : 'Se face singură'}</div></div><span class="badge ${setari.inchidereAutomata === false ? '' : 'ok'}">${setari.inchidereAutomata === false ? 'oprită' : 'automat'}</span></li>
+        </ul>
+        ${auto.ultimele().slice(0, 3).map((x) => `<p class="small ${x.tip === 'eroare' ? '' : 'muted'}" style="margin:8px 0 0">${x.tip === 'eroare' ? '<span class="badge err">eroare</span> ' : ''}${e(x.text)}</p>`).join('')}
       </section>
       <section class="panel">
         <h2>Ultimele documente</h2>

@@ -6,8 +6,9 @@ import {
 } from './engine.js';
 import { cont, toateConturile, NUME_CLASE } from './conturi.js';
 import { notaManuala } from './v-operatii.js';
+import { vSituatii, vInventar, vJurnalTVA, vInchidereAn } from './situatii.js';
 
-const TABS = [['jurnal', 'Registrul jurnal'], ['balanta', 'Balanța'], ['fisa', 'Fișa contului'], ['casa', 'Registrul de casă'], ['mijloace', 'Mijloace fixe'], ['inchidere', 'Închiderea lunii']];
+const TABS = [['jurnal', 'Registrul jurnal'], ['balanta', 'Balanța'], ['fisa', 'Fișa contului'], ['casa', 'Registrul de casă'], ['tva', 'Jurnale TVA'], ['mijloace', 'Mijloace fixe'], ['inchidere', 'Închiderea lunii'], ['inventar', 'Registrul-inventar'], ['situatii', 'Situații financiare'], ['an', 'Închiderea anului']];
 
 const st = { tipPer: 'luna', an: new Date().getFullYear(), luna: new Date().getMonth() + 1, t: Math.ceil((new Date().getMonth() + 1) / 3), cont: '5121' };
 
@@ -39,6 +40,12 @@ export async function render(main, ctx, params) {
   $('#print', main).onclick = () => window.print();
   const reg = $('#reg', main);
   const rerender = () => render(main, ctx, params);
+  const anSel = (o = {}) => { if (o.an) st.an = o.an; if (o.luna) st.luna = o.luna; rerender(); };
+  const anInchis = st.an === new Date().getFullYear() && new Date().getMonth() < 6 && ['inventar', 'situatii', 'an'].includes(tab) && !st.anAles ? st.an - 1 : st.an;
+  if (tab === 'situatii') return vSituatii(reg, ctx, anInchis, (o) => { st.anAles = true; anSel(o); });
+  if (tab === 'inventar') return vInventar(reg, ctx, anInchis, (o) => { st.anAles = true; anSel(o); });
+  if (tab === 'an') return vInchidereAn(reg, ctx, anInchis, (o) => { st.anAles = true; anSel(o); });
+  if (tab === 'tva') return vJurnalTVA(reg, ctx, st.an, st.luna, anSel);
   ({ jurnal, balanta: vBalanta, fisa, casa, mijloace, inchidere }[tab] || jurnal)(reg, ctx, rerender);
   $$('[data-per]', reg).forEach((b) => (b.onclick = () => { st.tipPer = b.dataset.per; rerender(); }));
   $('#p-luna', reg) && ($('#p-luna', reg).onchange = (ev) => { st.luna = Number(ev.target.value); rerender(); });

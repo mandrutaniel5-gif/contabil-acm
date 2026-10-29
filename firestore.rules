@@ -1,0 +1,21 @@
+rules_version = '2';
+// ACM Contabil — seiful criptat. Serverul vede doar text criptat la adrese aleatoare.
+//  - adresa seifului (43 de caractere) e derivată din cheia secretă a firmei: cine nu o are, nu o poate ghici;
+//  - doar dispozitivele aplicației (autentificare anonimă) pot citi sau scrie, și doar în seiful a cărui adresă o cunosc;
+//  - nu se poate lista nimic la nivel de bază de date și nu se poate șterge nimic.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /seifuri/{seif}/inregistrari/{rec} {
+      allow get, list: if request.auth != null && seif.size() == 43;
+      allow create, update: if request.auth != null && seif.size() == 43 && rec.size() <= 40
+        && request.resource.data.keys().hasOnly(['c', 'iv', 't', 'n', 'p'])
+        && request.resource.data.c is string && request.resource.data.c.size() <= 700000
+        && request.resource.data.iv is string && request.resource.data.iv.size() <= 32
+        && (!('t' in request.resource.data) || request.resource.data.t == request.time);
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

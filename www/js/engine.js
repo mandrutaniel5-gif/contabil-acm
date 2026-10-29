@@ -66,6 +66,7 @@ export function validNota(n) {
     if (!l.d || !l.c) err.push('Fiecare rând trebuie să aibă cont debitor și cont creditor.');
     if (l.d === l.c) err.push(`Contul ${l.d} nu poate fi și debitor și creditor.`);
     if (!Number(l.suma)) err.push('Suma nu poate fi zero.');
+    if (!/^\d{3,6}$/.test(String(l.d || '')) || !/^\d{3,6}$/.test(String(l.c || ''))) err.push('Conturile trebuie să fie coduri numerice din planul de conturi (ex. 401, 5121).');
   }
   return [...new Set(err)];
 }
@@ -98,13 +99,26 @@ export function balanta(note, setari, from, to) {
     const r = get(cod); r.sid += Number(v.d) || 0; r.sic += Number(v.c) || 0;
   }
   for (const n of note) {
-    if (n.data < inceputAn || n.data > to) continue;
+    if (n.data > to) continue;
+    // anii anteriori intră automat în soldul inițial (reportare automată de la an la an)
+    if (n.data < inceputAn) {
+      for (const l of n.linii) {
+        const s = Number(l.suma) || 0;
+        get(l.d).sid += s; get(l.c).sic += s;
+      }
+      continue;
+    }
     const prec = n.data < from;
     for (const l of n.linii) {
       const s = Number(l.suma) || 0;
       const D = get(l.d), C = get(l.c);
       if (prec) { D.rpd += s; C.rpc += s; } else { D.rcd += s; C.rcc += s; }
     }
+  }
+  // soldul inițial se prezintă net (debitor sau creditor), ca în balanța oficială
+  for (const r of m.values()) {
+    const net = r2(r.sid - r.sic);
+    r.sid = net > 0 ? net : 0; r.sic = net < 0 ? -net : 0;
   }
   const rows = [...m.values()].map((r) => {
     const tsd = r.sid + r.rpd + r.rcd, tsc = r.sic + r.rpc + r.rcc;
@@ -142,22 +156,23 @@ export function verificaBalanta({ rows, tot }) {
 
 // ---------- Fișa contului ----------
 export function fisaCont(note, setari, cod, from, to) {
-  const an = from.slice(0, 4);
   const si = setari.soldInitial?.[cod] || { d: 0, c: 0 };
   let sold = (Number(si.d) || 0) - (Number(si.c) || 0);
   const rows = [];
+  let soldInceput = null;
   for (const n of note) {
-    if (n.data < `${an}-01-01` || n.data > to) continue;
+    if (n.data > to) continue;
     for (const l of n.linii) {
       if (l.d !== cod && l.c !== cod) continue;
       const d = l.d === cod ? Number(l.suma) : 0;
       const c = l.c === cod ? Number(l.suma) : 0;
+      if (n.data >= from && soldInceput === null) soldInceput = sold;
       sold = r2(sold + d - c);
       if (n.data >= from) rows.push({ data: n.data, nr: n.nr, document: n.document, explicatie: n.explicatie, contra: l.d === cod ? l.c : l.d, d, c, sold, notaId: n.id });
     }
   }
-  const soldInceput = r2(rows.length ? rows[0].sold - rows[0].d + rows[0].c : sold);
-  return { rows, soldInceput, soldFinal: sold };
+  if (soldInceput === null) soldInceput = sold;
+  return { rows, soldInceput: r2(soldInceput), soldFinal: sold };
 }
 
 // ---------- Registrul de casă (pe zile) ----------
@@ -184,7 +199,18 @@ export function noteDinDocument(doc, setari) {
   const partener = doc.partener?.nume || '';
   const docTxt = `${doc.tipDocument || 'Factura'} ${doc.nr || ''}`.trim();
 
-  if (doc.tip === 'cheltuiala') {
+  if (doc.tip === 'cheltuiala' && doc.taxareInversa && setari.platitorTVA) {
+    // taxare inversă (ex. servicii din UE, art. 307/331 Cod fiscal): factura vine fără TVA,
+    // cumpărătorul calculează TVA-ul și îl înregistrează simultan ca deductibil și colectat
+    const contCh = doc.cont || '628';
+    const contFurn = contCh.startsWith('2') ? '404' : '401';
+    const cota = Number(doc.tvaCota) || 0.21;
+    const tvaTI = r2(total * cota);
+    linii.push({ d: contCh, c: contFurn, suma: total, expl: doc.descriere || cont(contCh).nume });
+    linii.push({ d: '4426', c: '4427', suma: tvaTI, expl: 'TVA taxare inversă', tvaCota: cota, baza: total, taxareInversa: true });
+    const plata = { banca: '5121', casa: '5311', asociat: '4551', avans: '542' }[doc.plata];
+    if (plata) linii.push({ d: contFurn, c: plata, suma: total, expl: 'Plată ' + partener });
+  } else if (doc.tip === 'cheltuiala') {
     const contCh = doc.cont || '6588';
     const imob = contCh.startsWith('2');
     const contFurn = imob ? '404' : '401';

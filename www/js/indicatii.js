@@ -2,7 +2,7 @@
 import { balanta, verificaBalanta, lunaInterval, lei, LUNI, azi, cifraAfaceri, reguli, dataRo, iso } from './engine.js';
 import { termene, zilePana } from './declaratii.js';
 
-export async function indicatii({ note, documente, setari, mijloace }) {
+export async function indicatii({ note, documente, setari, mijloace, extrase = [], seif = null, spv = null }) {
   const out = [];
   const now = new Date();
   const an = now.getFullYear();
@@ -14,6 +14,16 @@ export async function indicatii({ note, documente, setari, mijloace }) {
   }
 
   if (setari.regim === 'micro' && !setari.cursSetat) out.push({ grav: 'info', text: 'Setează cursul BNR al euro din ultima zi a anului trecut, ca plafonul micro de 100.000 € să fie calculat corect.', act: ['Regim fiscal', '#setari/fiscal'] });
+
+  const deVer = documente.filter((d) => d.deVerificat);
+  if (deVer.length) out.push({ grav: 'warn', text: `${deVer.length} ${deVer.length === 1 ? 'document așteaptă' : 'documente așteaptă'} o verificare (venite din SPV sau din extras). Uită-te la contul propus și salvează.`, act: ['Vezi documentele', '#documente'], cheie: 'verificat' });
+  const neclare = extrase.flatMap((x) => x.tranzactii.filter((t) => t.stare === 'propus' || t.stare === 'neclar' || t.stare === 'nou'));
+  if (neclare.length) out.push({ grav: 'warn', text: `${neclare.length} ${neclare.length === 1 ? 'tranzacție din extras așteaptă' : 'tranzacții din extras așteaptă'} confirmarea ta.`, act: ['Deschide Banca', '#banca'] });
+  const restante = documente.filter((d) => d.plata === 'neplatit' && !d.achitat && d.tip === 'venit' && (d.scadenta || '9999') < azi());
+  if (restante.length) out.push({ grav: 'info', text: `${restante.length} ${restante.length === 1 ? 'client are factura' : 'facturi de la clienți sunt'} peste scadență: ${lei(restante.reduce((t, d) => t + Number(d.total) - Number(d.platitPartial || 0), 0))} lei de încasat.`, act: ['Parteneri', '#parteneri'] });
+  if (!setari.platitorTVA && documente.some((d) => d.taxareInversa && d.data?.startsWith(String(an)))) out.push({ grav: 'warn', text: 'Ai facturi cu taxare inversă (servicii din străinătate), deși firma nu e plătitoare de TVA. Probabil ai nevoie de cod special de TVA (art. 317) și de declarația D301. Întreabă asistentul sau contabilul.' });
+  if (spv && spv.respinse && spv.respinse.length && Date.now() - (spv.ultima || 0) < 30 * 864e5) out.push({ grav: 'err', text: `ANAF a respins ${spv.respinse.length === 1 ? 'o factură' : spv.respinse.length + ' facturi'} trimise în SPV. Corectează-le în ACM Docs și retrimite-le.`, act: ['Detalii', '#setari/spv'] });
+  if (!seif && note.length > 5) out.push({ grav: 'info', text: 'Datele sunt doar pe acest dispozitiv. Creează seiful criptat ca să le ai și pe telefon și să nu le pierzi dacă se strică dispozitivul.', act: ['Dispozitive', '#setari/sync'] });
 
   // Termene apropiate
   for (const t of termene(setari, now, 1)) {

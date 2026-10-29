@@ -11,6 +11,10 @@ const SUGESTII = {
   registre: ['Explică-mi balanța de verificare.', 'De ce trebuie închisă luna?', 'Ce înseamnă sold debitor și sold creditor?'],
   declaratii: ['Ce declarații trebuie să depun și când?', 'Cum depun o declarație în SPV?', 'Ce este SAF-T și cum îl validez?'],
   setari: ['Cum aflu dacă firma e microîntreprindere?', 'Ce înseamnă să fii plătitor de TVA?', 'De unde iau soldurile inițiale?'],
+  banca: ['Cum export extrasul din internet banking?', 'Ce fac cu o plată pe care nu o recunosc?', 'Cum înregistrez o plată cu cardul la Google sau Facebook?'],
+  parteneri: ['Ce fac cu un client care nu plătește?', 'Cum compensez o datorie cu o creanță?', 'Cum confirm soldurile cu partenerii la final de an?'],
+  formulare: ['Când folosesc o dispoziție de plată?', 'Cât e diurna neimpozabilă?', 'Cum fac decontul unui avans?'],
+  ghid: ['Ce trebuie să fac lunar?', 'Ce declarații depune firma mea?', 'Ce face aplicația singură?'],
 };
 
 let ecranCurent = 'acasa';
@@ -23,13 +27,13 @@ async function salveaza(messages) { await db.put('chat', { id: 'main', messages:
 export async function deschide(intrebare) {
   const on = await ai.conectat();
   const s = openSheet('Asistent', `<div class="msgs" id="msgs"></div><div id="sug" style="margin-top:16px"></div>`,
-    `<div class="composer"><textarea id="q" rows="1" placeholder="${on ? 'Întreabă orice despre contabilitatea firmei…' : 'Conectează asistentul din Setări'}" ${on ? '' : 'disabled'}></textarea><button class="btn primary" id="send" aria-label="Trimite" ${on ? '' : 'disabled'}>${icon('send')}</button></div>
+    `<div class="composer"><textarea id="q" rows="1" placeholder="${on ? 'Întreabă orice despre contabilitatea firmei…' : 'Asistentul are nevoie de internet'}" ${on ? '' : 'disabled'}></textarea><button class="btn primary" id="send" aria-label="Trimite" ${on ? '' : 'disabled'}>${icon('send')}</button></div>
      <div class="row" style="justify-content:space-between;margin-top:8px"><span class="muted small">Răspunsurile pot conține greșeli. Pentru decizii importante, confirmă cu un contabil autorizat.</span><button class="btn sm ghost" id="clear">Conversație nouă</button></div>`);
   const msgsEl = $('#msgs', s);
   let messages = await istoric();
   const draw = () => {
     msgsEl.innerHTML = messages.length ? messages.map((m) => `<div class="msg ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : e(m.content)}</div>`).join('')
-      : `<div class="msg assistant">${on ? 'Bună! Sunt aici să te ajut cu contabilitatea ACM CODE SRL. Văd soldurile, documentele și termenele firmei, așa că pot răspunde concret. Ce vrei să faci?' : 'Ca să pot citi documente și răspunde la întrebări, conectează-mă în Setări → Asistent AI. Până atunci, aplicația îți dă indicații automate pe fiecare ecran, iar fiecare cont are explicația lui.'}</div>`;
+      : `<div class="msg assistant">${on ? 'Bună! Sunt aici să te ajut cu contabilitatea ACM CODE SRL. Văd soldurile, documentele și termenele firmei, așa că pot răspunde concret. Ce vrei să faci?' : 'Asistentul are nevoie de internet. Până revine conexiunea, aplicația îți dă indicații automate pe fiecare ecran, iar fiecare cont are explicația lui.'}</div>`;
     $('#sug', s).innerHTML = on && messages.length < 2 ? `<div class="chips">${(SUGESTII[ecranCurent] || SUGESTII.acasa).map((x) => `<button class="chip">${e(x)}</button>`).join('')}</div>` : '';
     $('#sug', s).querySelectorAll('.chip').forEach((c) => (c.onclick = () => trimite(c.textContent)));
     s.querySelector('.sheet-body').scrollTop = 1e9;
