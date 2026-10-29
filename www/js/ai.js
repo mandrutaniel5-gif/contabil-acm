@@ -1,4 +1,4 @@
-// Client AI: apelează funcțiile serverului firmei. Autentificarea e anonimă (fără cont), cheia Claude stă pe server.
+// Client AI: apelează funcțiile serverului firmei. Autentificarea e anonimă (fără cont), cheia Gemini stă pe server.
 import { idToken, FIREBASE } from './auth.js';
 import { KEYWORD_RULES } from './rules.js';
 
