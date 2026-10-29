@@ -48,7 +48,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle.log; rc=${PIPESTATUS[0]}
           if [ $rc -ne 0 ]; then
-            grep -E "What went wrong|error:|Could not|failed|> " -A3 gradle.log | grep -v "^--$" | head -25 | while IFS= read -r l; do echo "::error::$l"; done
+            { grep -E "^e: |error:|ERROR:" gradle.log | head -10; sed -n '/^FAILURE:/,/^\* Try:/p' gradle.log | head -30; } | while IFS= read -r l; do [ -n "$l" ] && echo "::error::$l"; done
             exit $rc
           fi
       - run: |
