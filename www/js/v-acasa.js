@@ -47,7 +47,8 @@ export async function render(main, ctx) {
   ${pasi ? `<section class="panel" style="margin-top:16px" id="primi-pasi">
     <div class="row" style="justify-content:space-between"><h2 style="margin:0">Primii pași · ${pasi.filter((x) => x.ok).length} din ${pasi.length}</h2><button class="btn sm ghost" id="pp-ascunde">Ascunde</button></div>
     <p class="muted small">Fă-i o singură dată, în ordinea de mai jos. Apoi aplicația lucrează aproape singură: tu adaugi bonurile și extrasul de cont o dată pe lună.</p>
-    <ul class="list">${pasi.map((x, i) => `<li class="${x.ok ? '' : 'clickable'}" ${x.ok ? '' : `data-go="${x.act}"`}><span class="badge ${x.ok ? 'ok' : ''}" style="min-width:28px;justify-content:center">${x.ok ? '✓' : i + 1}</span><div class="grow"><div class="t" style="${x.ok ? 'text-decoration:line-through;opacity:.6' : ''}">${e(x.text)}</div></div></li>`).join('')}</ul>
+    <ul class="list">${pasi.map((x, i) => (x.ok ? '' : `<li class="clickable" data-go="${x.act}"><span class="badge" style="min-width:28px;justify-content:center">${i + 1}</span><div class="grow"><div class="t" style="white-space:normal">${e(x.text)}</div></div></li>`)).join('')}</ul>
+    ${pasi.some((x) => x.ok) ? `<p class="muted small" style="margin:8px 0 0">Făcute: ${pasi.filter((x) => x.ok).map((x) => e(x.text.split(/[:(,]/)[0].trim())).join(' · ')}</p>` : ''}
   </section>` : ''}
 
   <div class="split" style="margin-top:16px">

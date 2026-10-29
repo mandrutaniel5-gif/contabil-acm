@@ -47,7 +47,7 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
 /* nimic nu are voie să împingă lățimea paginii (altfel iOS micșorează tot ecranul) */
 input, select, textarea, button, img, svg, video { max-width: 100%; }
 input, select, textarea { min-width: 0; }
@@ -113,7 +113,7 @@ h3 { font-size: 15px; margin: 0 0 6px; font-weight: 650; }
 .figure { padding: 4px 0; }
 .figure .label { color: var(--muted); font-size: 13px; }
 .figure .value { font-size: 30px; font-weight: 650; letter-spacing: -.03em; line-height: 1.15; margin-top: 2px; }
-.figure .value small { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+.figure .value small { white-space: nowrap; font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
 .figure .hint { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
 .figures .figure { padding: 4px 22px; border-left: 1px solid var(--line); }
@@ -274,13 +274,14 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
   .sheet-head { padding-top: calc(16px + var(--sa-top)); }
   .sheet-foot { padding-bottom: calc(14px + var(--sa-bottom)); }
   .page-head .row .btn { flex: 1 1 auto; }
-  .figure .value { overflow-wrap: anywhere; }
+  .figure .value { overflow-wrap: normal; word-break: keep-all; font-size: clamp(18px, 5.2vw, 26px); }
+  .figure .value small { display: inline-block; }
   .seg:not(.full) { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
   .panel { padding: 18px 16px; border-radius: 16px; }
   /* bara de stare (ceas, baterie) nu acoperă conținutul când derulezi */
   body::before { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--sa-top); background: var(--bg); z-index: 45; pointer-events: none; }
   .table-wrap { margin: 0 -16px; padding: 0 16px; }
-  .figure .value { font-size: 25px; }
+
   .figures .figure { padding: 4px 14px; }
   .tabbar {
     display: flex; position: fixed; left: 12px; right: 12px; bottom: calc(10px + var(--sa-bottom)); z-index: 30;
