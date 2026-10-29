@@ -223,11 +223,15 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
   box-shadow: var(--shadow-sheet); transform: translateX(104%); transition: transform .32s cubic-bezier(.2,.8,.2,1);
   display: flex; flex-direction: column;
 }
-.sheet.open { transform: none; }
+.sheet.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+.sheet:not(.open) { visibility: hidden; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s linear .32s; }
+/* cât e deschisă o foaie, pagina din spate nu se mișcă și nu primește atingeri */
+body.sheet-deschis { overflow: hidden; }
+body.sheet-deschis #main, body.sheet-deschis .tabbar, body.sheet-deschis .fab { pointer-events: none; }
 .sheet.wide { width: min(720px, 100vw); }
 .sheet-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
 .sheet-head h2 { margin: 0; flex: 1; font-size: 17px; }
-.sheet-body { flex: 1; overflow-y: auto; padding: 18px; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 18px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .sheet-foot { padding: 14px 18px; border-top: 1px solid var(--line); }
 .icon-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--surface-2); display: grid; place-items: center; cursor: pointer; }
 .icon-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -326,3 +330,13 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
 
 /* pe ecranele cu formulare butonul asistentului nu acoperă butoanele Salvează */
 body.editor .fab { display: none !important; }
+
+/* Asistentul, ca ecran separat */
+.chat-page { display: flex; flex-direction: column; min-height: calc(100dvh - 140px); }
+.chat-panel { flex: 1; }
+.chat-page .msgs .msg { max-width: min(88%, 720px); }
+.composer-bar { position: sticky; bottom: 0; z-index: 20; background: var(--bg); padding: 10px 0 calc(6px + var(--sa-bottom)); margin-top: 12px; }
+@media (max-width: 760px) {
+  .composer-bar { bottom: calc(74px + var(--sa-bottom)); padding-bottom: 6px; }
+  .chat-page { min-height: calc(100dvh - 200px); }
+}

@@ -55,7 +55,7 @@ export function openSheet(title, bodyHTML, footHTML = '', { wide = false, onClos
   s.classList.toggle('wide', wide);
   s.innerHTML = `<div class="sheet-head"><h2>${e(title)}</h2><button class="icon-btn" data-close aria-label="Închide">${icon('x')}</button></div>
     <div class="sheet-body">${bodyHTML}</div>${footHTML ? `<div class="sheet-foot">${footHTML}</div>` : ''}`;
-  s.classList.add('open'); document.getElementById('sheet-back').classList.add('open');
+  s.classList.add('open'); document.getElementById('sheet-back').classList.add('open'); document.body.classList.add('sheet-deschis');
   s.setAttribute('aria-hidden', 'false');
   onCloseCb = onClose || null;
   s.querySelector('[data-close]').onclick = closeSheet;
@@ -63,7 +63,7 @@ export function openSheet(title, bodyHTML, footHTML = '', { wide = false, onClos
 }
 export function closeSheet() {
   const s = document.getElementById('sheet');
-  s.classList.remove('open'); document.getElementById('sheet-back').classList.remove('open');
+  s.classList.remove('open'); document.getElementById('sheet-back').classList.remove('open'); document.body.classList.remove('sheet-deschis');
   s.setAttribute('aria-hidden', 'true');
   if (onCloseCb) { const f = onCloseCb; onCloseCb = null; f(); }
 }

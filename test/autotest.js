@@ -40,7 +40,7 @@ export async function ruleaza() {
   log('START', navigator.userAgent, JSON.stringify(latime()));
   if (await date()) { log('date de test create, repornesc aplicația'); location.reload(); return; }
   // 1. fiecare ecran: nu are voie să fie mai lat decât ecranul și nici mărit
-  const ecrane = ['acasa', 'documente', 'documente/nou', 'banca', 'operatii', 'parteneri', 'registre/jurnal', 'registre/balanta', 'registre/fisa', 'registre/casa', 'registre/tva', 'registre/mijloace', 'registre/inchidere', 'registre/inventar', 'registre/situatii', 'registre/an', 'declaratii', 'declaratii/impozit', 'declaratii/saft', 'declaratii/salarii', 'declaratii/tva', 'formulare', 'formulare/chitanta', 'formulare/dispozitie', 'formulare/decont', 'formulare/deplasare', 'formulare/hotarare', 'ghid', 'setari/firma', 'setari/fiscal', 'setari/sync', 'setari/spv', 'setari/auto', 'setari/solduri', 'setari/date', 'setari/aspect'];
+  const ecrane = ['acasa', 'documente', 'documente/nou', 'banca', 'operatii', 'parteneri', 'registre/jurnal', 'registre/balanta', 'registre/fisa', 'registre/casa', 'registre/tva', 'registre/mijloace', 'registre/inchidere', 'registre/inventar', 'registre/situatii', 'registre/an', 'declaratii', 'declaratii/impozit', 'declaratii/saft', 'declaratii/salarii', 'declaratii/tva', 'formulare', 'formulare/chitanta', 'formulare/dispozitie', 'formulare/decont', 'formulare/deplasare', 'formulare/hotarare', 'ghid', 'asistent', 'setari/firma', 'setari/fiscal', 'setari/sync', 'setari/spv', 'setari/auto', 'setari/solduri', 'setari/date', 'setari/aspect'];
   for (const h of ecrane) {
     await mergi(h);
     const l = latime();

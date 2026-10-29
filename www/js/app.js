@@ -27,6 +27,7 @@ const ROUTES = {
   formulare: { titlu: 'Formulare', icon: 'form', render: formulare },
   ghid: { titlu: 'Ghid', icon: 'help', render: ghid },
   setari: { titlu: 'Setări', icon: 'gear', render: setari },
+  asistent: { titlu: 'Asistent', icon: 'spark', render: (m, c) => asistent.render(m, c), ascuns: true },
 };
 
 const ctx = {
@@ -43,7 +44,7 @@ const ctx = {
   async reloadDiscret() {
     await this.load();
     const h = location.hash.slice(1) || 'acasa';
-    const editor = /^(documente\/.+|formulare\/.+|setari|operatii|registre\/mijloace\/nou)/.test(h);
+    const editor = /^(documente\/.+|formulare\/.+|setari|operatii|registre\/mijloace\/nou|asistent)/.test(h);
     const deschis = document.getElementById('sheet').classList.contains('open');
     const scrie = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
     if (!editor && !deschis && !scrie) await route({ pastreazaScroll: true });
@@ -61,7 +62,7 @@ function applyTheme(t) {
 }
 
 function shell() {
-  const nav = Object.entries(ROUTES).map(([k, r]) => `<button class="nav-btn" data-go="#${k}" data-r="${k}">${icon(r.icon)}${r.titlu}</button>`).join('');
+  const nav = Object.entries(ROUTES).filter(([, r]) => !r.ascuns).map(([k, r]) => `<button class="nav-btn" data-go="#${k}" data-r="${k}">${icon(r.icon)}${r.titlu}</button>`).join('');
   const tabs = ['acasa', 'documente', 'banca', 'registre'].map((k) => `<button data-go="#${k}" data-r="${k}">${icon(ROUTES[k].icon)}${ROUTES[k].titlu}</button>`).join('')
     + `<button id="more" data-r="more">${icon('more')}Mai mult</button>`;
   document.getElementById('app').innerHTML = `
@@ -70,7 +71,7 @@ function shell() {
       <div class="brand"><div class="brand-mark">AC</div><div><b>ACM Contabil</b><small>${''}</small></div></div>
       ${nav}
       <div class="spacer"></div>
-      <button class="nav-btn ai-side" id="ai-btn">${icon('spark')}Asistent</button>
+      <button class="nav-btn ai-side" id="ai-btn" data-r="asistent">${icon('spark')}Asistent</button>
     </aside>
     <main id="main"></main>
   </div>
@@ -89,7 +90,7 @@ async function route(opt = {}) {
   const [name, ...params] = (location.hash.slice(1) || 'acasa').split('/');
   const r = ROUTES[name] || ROUTES.acasa;
   const key = ROUTES[name] ? name : 'acasa';
-  document.body.classList.toggle('editor', (['documente', 'parteneri'].includes(key) && params.length > 0) || (key === 'registre' && params[1] === 'nou') || key === 'setari' || key === 'formulare' && params.length > 0);
+  document.body.classList.toggle('editor', (['documente', 'parteneri'].includes(key) && params.length > 0) || (key === 'registre' && params[1] === 'nou') || key === 'setari' || key === 'asistent' || (key === 'formulare' && params.length > 0));
   $$('[data-r]').forEach((b) => b.setAttribute('aria-current', b.dataset.r === key || (b.dataset.r === 'more' && MAI_MULT.includes(key)) ? 'page' : 'false'));
   document.querySelector('.brand small').textContent = ctx.setari.nume;
   asistent.seteazaEcran(key === 'declaratii' && params[0] === 'salarii' ? 'salarii' : key, ctx);
