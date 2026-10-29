@@ -40,7 +40,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p rezultate-ios
-          { brew tap facebook/fb && brew install idb-companion; } > rezultate-ios/idb.txt 2>&1 || echo "brew idb-companion: eșuat" >> rezultate-ios/idb.txt
+          { brew tap facebook/fb && brew trust facebook/fb; brew install facebook/fb/idb-companion; } > rezultate-ios/idb.txt 2>&1 || echo "brew idb-companion: eșuat" >> rezultate-ios/idb.txt
           # fb-idb nu merge cu Python 3.15 (asyncio): îl instalăm izolat, cu Python 3.12, prin uv
           { brew install uv && uv tool install --python 3.12 fb-idb; } >> rezultate-ios/idb.txt 2>&1 || echo "fb-idb: eșuat" >> rezultate-ios/idb.txt
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"; echo "$HOME/.local/bin" >> "$GITHUB_PATH"
