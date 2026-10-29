@@ -1,0 +1,36 @@
+[34m==>[0m [1mTapping facebook/fb[0m
+Cloning into '/opt/homebrew/Library/Taps/facebook/homebrew-fb'...
+Tapped 8 formulae (28 files, 5.9MB).
+Trusted tap: facebook/fb
+[34m==>[0m [1mTrusted formula facebook/fb/idb-companion[0m
+[32m==>[0m [1mFetching downloads for: [32midb-companion[39m[0m
+✔︎ Formula idb-companion (1.7.7)
+[34m==>[0m [1mInstalling idb-companion from facebook/fb[0m
+🍺  /opt/homebrew/Cellar/idb-companion/1.7.7: 37 files, 114.8MB, built in 4 seconds
+[32m==>[0m [1mDownloading bottle manifests[0m
+✔︎ Bottle Manifest uv (0.13.4)
+[32m==>[0m [1mFetching downloads for: [32muv[39m[0m
+✔︎ Bottle uv (0.13.4)
+[34m==>[0m [1mPouring uv--0.13.4.arm64_tahoe.bottle.tar.gz[0m
+🍺  /opt/homebrew/Cellar/uv/0.13.4: 17 files, 34MB
+[32m==>[0m [1mCaveats[0m
+Bash completion has been installed to:
+  /opt/homebrew/etc/bash_completion.d
+Resolved 8 packages in 261ms
+Prepared 8 packages in 81ms
+Installed 8 packages in 38ms
+ + aiofiles==25.1.0
+ + fb-idb==1.7.7
+ + grpclib==0.4.9
+ + h2==4.4.1
+ + hpack==4.2.0
+ + hyperframe==6.1.0
+ + multidict==7.2.1
+ + protobuf==7.36.2
+Installed 1 executable: idb
+user-base: /Users/runner/Library/Python/3.15
+ls: /Users/runner/Library/Python/3.15/bin: No such file or directory
+/Users/runner/.local/bin:
+idb
+/opt/homebrew/bin/idb_companion
+/Users/runner/.local/bin/idb

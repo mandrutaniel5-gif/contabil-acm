@@ -1,0 +1,171 @@
+2026-10-29 13:38:27.365 App[6422:24455] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/14818EE9-508F-4481-A5BB-B25046EE207C/data/Containers/Data/Application/442C20D1-E50D-4471-A099-87403FC62ABB/Library/Cookies/ro.acmcode.contabil.binarycookies
+⚡️  Loading app at capacitor://localhost...
+⚡️  WebView loaded
+⚡️  To Native ->  CapacitorHttp request 11060472
+⚡️  [log] - ACMTEST START Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST date de test create, repornesc aplicația
+⚡️  WebView loaded
+⚡️  To Native ->  CapacitorHttp request 31012073
+2026-10-29 13:38:46.432 App[6422:24465] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"headers":{"set-cookie":"TS0133f3b7=0187e48c1bafd55c4a5d8e84b7e77067315a256b3722ef5a15e059ed7ebef185671765c2c636e219d822bd85eb3c0134df3d3aaf26; Path=\/; Domain=.curs.bnr.ro","x-frame-options":"SAMEORIGIN","strict-transport-security":"max-age=31536000;incl
+⚡️  [log] - ACMTEST START Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran acasa {"iw":420,"vw":420,"sw":420,"scale":1}
+2026-10-29 13:38:47.973 App[6422:24465] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"data":"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPERhdGFTZXQgeG1sbnM9Imh0dHBzOi8vd3d3LmJuci5yby94c2QiIHhtbG5zOnhzaT0iaHR0cHM6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4c2k6c2NoZW1hTG9jYXRpb249Imh0dHBzOi8vY3Vycy5ibnIucm8veHNkL25icmZ4cmF
+⚡️  To Native ->  CapacitorHttp request 31012074
+2026-10-29 13:38:48.320 App[6422:24465] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"status":200,"headers":{"pragma":"no-cache","cache-control":"no-cache","connection":"keep-alive","x-frame-options":"SAMEORIGIN","referrer-policy":"strict-origin-when-cross-origin","x-xss-protection":"1; mode=block","content-type":"text\/xml","strict-trans
+⚡️  To Native ->  CapacitorHttp request 31012075
+⚡️  [log] - ACMTEST OK ecran documente {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran documente/nou {"iw":420,"vw":420,"sw":420,"scale":1}
+2026-10-29 13:38:49.513 App[6422:24503] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"url":"https:\/\/curs.bnr.ro\/files\/xml\/years\/nbrfxrates2025.xml","data":"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPERhdGFTZXQgeG1sbnM9Imh0dHA6Ly93d3cuYm5yLnJvL3hzZCIgeG1sbnM6eHNpPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYS1pbnN0YW5jZSIgeH
+⚡️  [log] - ACMTEST OK ecran banca {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran operatii {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran parteneri {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/jurnal {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/balanta {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/fisa {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/casa {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/tva {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/mijloace {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/inchidere {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/inventar {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/situatii {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran registre/an {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran declaratii {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran declaratii/impozit {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran declaratii/saft {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran declaratii/salarii {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran declaratii/tva {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare/chitanta {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare/dispozitie {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare/decont {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare/deplasare {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran formulare/hotarare {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran ghid {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/firma {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/fiscal {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/sync {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/spv {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/auto {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/solduri {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/date {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST OK ecran setari/aspect {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST ACMSHOT acasa
+⚡️  [log] - ACMSHOT acasa
+⚡️  [log] - ACMTEST ACMSHOT documente_nou
+⚡️  [log] - ACMSHOT documente_nou
+⚡️  [log] - ACMTEST ACMSHOT banca
+⚡️  [log] - ACMSHOT banca
+⚡️  [log] - ACMTEST ACMSHOT registre_balanta
+⚡️  [log] - ACMSHOT registre_balanta
+⚡️  [log] - ACMTEST ACMSHOT declaratii_impozit
+⚡️  [log] - ACMSHOT declaratii_impozit
+⚡️  [log] - ACMTEST ACMSHOT formulare_chitanta
+⚡️  [log] - ACMSHOT formulare_chitanta
+⚡️  [log] - ACMTEST ACMSHOT setari_sync
+⚡️  [log] - ACMSHOT setari_sync
+⚡️  [log] - ACMTAP 93 456 documente/nou #total
+[runner] tap 93,456 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere documente/nou #total {"iw":420,"vw":420,"sw":420,"scale":1,"focus":false}
+⚡️  [log] - ACMTEST ACMSHOT tap_documente_nou_total
+⚡️  [log] - ACMSHOT tap_documente_nou_total
+⚡️  [log] - ACMTAP 93 456 documente/nou #pnume
+[runner] tap 93,456 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere documente/nou #pnume {"iw":420,"vw":420,"sw":420,"scale":1,"focus":false}
+⚡️  [log] - ACMTEST ACMSHOT tap_documente_nou_pnume
+⚡️  [log] - ACMSHOT tap_documente_nou_pnume
+⚡️  [log] - ACMTAP 93 456 documente/nou #cont
+[runner] tap 93,456 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere documente/nou #cont {"iw":420,"vw":420,"sw":420,"scale":1,"focus":false}
+⚡️  [log] - ACMTEST ACMSHOT tap_documente_nou_cont
+⚡️  [log] - ACMSHOT tap_documente_nou_cont
+⚡️  [log] - ACMTAP 93 371 formulare/chitanta #suma
+[runner] tap 93,371 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere formulare/chitanta #suma {"iw":420,"vw":420,"sw":420,"scale":1,"focus":false}
+⚡️  [log] - ACMTEST ACMSHOT tap_formulare_chitanta_suma
+⚡️  [log] - ACMSHOT tap_formulare_chitanta_suma
+⚡️  [log] - ACMTAP 93 416 setari/firma #cui
+[runner] tap 93,416 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere setari/firma #cui {"iw":420,"vw":420,"sw":420,"scale":1,"focus":true}
+⚡️  [log] - ACMTEST ACMSHOT tap_setari_firma_cui
+⚡️  [log] - ACMSHOT tap_setari_firma_cui
+⚡️  [log] - ACMTAP 78 263 operatii #o-suma
+[runner] tap 78,263 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom la atingere operatii #o-suma {"iw":420,"vw":420,"sw":420,"scale":1,"focus":true}
+⚡️  [log] - ACMTEST ACMSHOT tap_operatii_o-suma
+⚡️  [log] - ACMSHOT tap_operatii_o-suma
+⚡️  [log] - ACMTEST OK pagina se derulează {"y":600,"h":1989}
+⚡️  [log] - ACMTAP 78 200 salariat nume
+[runner] tap 78,200 rc=0 
+⚡️  [log] - ACMTEST OK fără zoom în foaia de salariat {"iw":420,"vw":420,"sw":420,"scale":1}
+⚡️  [log] - ACMTEST ACMSHOT foaie_salariat
+⚡️  [log] - ACMSHOT foaie_salariat
+⚡️  To Native ->  CapacitorHttp request 31012076
+2026-10-29 13:40:28.581 App[6422:24504] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"url":"https:\/\/curs.bnr.ro\/files\/xml\/years\/nbrfxrates2026.xml","status":200,"data":"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPERhdGFTZXQgeG1sbnM9Imh0dHBzOi8vd3d3LmJuci5yby94c2QiIHhtbG5zOnhzaT0iaHR0cHM6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hL
+⚡️  To Native ->  CapacitorHttp request 31012077
+2026-10-29 13:40:28.847 App[6422:33676] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"status":200,"url":"https:\/\/curs.bnr.ro\/nbrfxrates.xml","data":"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPERhdGFTZXQgeG1sbnM9Imh0dHBzOi8vd3d3LmJuci5yby94c2QiIHhtbG5zOnhzaT0iaHR0cHM6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4c2k6c2No
+⚡️  [log] - ACMTEST OK curs BNR prin HTTP nativ 5.3449 
+⚡️  To Native ->  CapacitorHttp request 31012078
+2026-10-29 13:40:29.691 App[6422:24507] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"data":{"notFound":[],"found":[{"adresa_sediu_social":{"stara":"","sdetalii_Adresa":"spatiul E47","scod_Localitate":"6","snumar_Strada":"148","scod_Judet":"40","sdenumire_Strada":"Şos. Virtuţii","scod_JudetAuto":"B","scod_Postal":"60787","sdenumire_Judet"
+⚡️  [log] - ACMTEST OK ANAF CUI prin HTTP nativ DANTE INTERNATIONAL SA
+⚡️  To Native ->  CapacitorHttp request 31012079
+2026-10-29 13:40:29.897 App[6422:35574] [NSURLSession sharedSession] may not be invalidated
+⚡️  TO JS {"status":200,"data":{"stare":"nok","Messages":[{"message":"Fisierul transmis nu este valid. org.xml.sax.SAXParseException; lineNumber: 1; columnNumber: 95; cvc-complex-type.2.4.b: The content of element 'Invoice' is not complete. One of '{\"urn:oasis:name
+⚡️  [log] - ACMTEST OK ANAF e-Factura (validator) prin HTTP nativ 200 {"stare":"nok","Messages":[{"message":"Fisierul transmis nu este valid. org.xml.
+⚡️  [log] - ACMTEST OK WebCrypto ECDH/HKDF + DecompressionStream 
+⚡️  [log] - ACMTEST GATA {"total":48,"esuate":0}
+⚡️  [log] - ACMRES {"nume":"ecran acasa","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran documente","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran documente/nou","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran banca","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran operatii","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran parteneri","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/jurnal","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/balanta","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/fisa","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/casa","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/tva","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/mijloace","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/inchidere","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/inventar","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/situatii","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran registre/an","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran declaratii","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran declaratii/impozit","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran declaratii/saft","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran declaratii/salarii","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran declaratii/tva","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare/chitanta","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare/dispozitie","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare/decont","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare/deplasare","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran formulare/hotarare","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran ghid","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/firma","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/fiscal","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/sync","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/spv","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/auto","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/solduri","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/date","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"ecran setari/aspect","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere documente/nou #total","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":false}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere documente/nou #pnume","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":false}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere documente/nou #cont","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":false}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere formulare/chitanta #suma","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":false}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere setari/firma #cui","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":true}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom la atingere operatii #o-suma","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1,\"focus\":true}"}
+⚡️  [log] - ACMRES {"nume":"pagina se derulează","ok":true,"detalii":"{\"y\":600,\"h\":1989}"}
+⚡️  [log] - ACMRES {"nume":"fără zoom în foaia de salariat","ok":true,"detalii":"{\"iw\":420,\"vw\":420,\"sw\":420,\"scale\":1}"}
+⚡️  [log] - ACMRES {"nume":"curs BNR prin HTTP nativ","ok":true,"detalii":"5.3449 "}
+⚡️  [log] - ACMRES {"nume":"ANAF CUI prin HTTP nativ","ok":true,"detalii":"DANTE INTERNATIONAL SA"}
+⚡️  [log] - ACMRES {"nume":"ANAF e-Factura (validator) prin HTTP nativ","ok":true,"detalii":"200 {\"stare\":\"nok\",\"Messages\":[{\"message\":\"Fisierul transmis nu este valid. org.xml."}
+⚡️  [log] - ACMRES {"nume":"WebCrypto ECDH/HKDF + DecompressionStream","ok":true,"detalii":""}
+⚡️  [log] - ACMDONE 48
