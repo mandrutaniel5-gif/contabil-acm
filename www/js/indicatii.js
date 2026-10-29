@@ -158,6 +158,22 @@ export function primiPasi({ note, setari, extrase = [], seif = null, anaf = null
 function shift(zile) { const d = new Date(); d.setDate(d.getDate() + zile); return d.toISOString().slice(0, 10); }
 
 // Rezumat text pentru contextul asistentului AI
+/** Contextul complet pentru asistent: rezumatul contabil + ce arată aplicația pe Acasă + salariați + termene. */
+export async function contextAsistent(ctx, ecran) {
+  const { lista } = await import('./salarii.js');
+  const sal = await lista();
+  const tips = await indicatii(ctx).catch(() => []);
+  const tm = termene(ctx.setari, new Date(), 2).slice(0, 6);
+  const s = ctx.setari;
+  return `${rezumatPentruAI(ctx, ecran)}
+Detalii firmă: înființată ${s.dataInfiintare || 'necompletat'}; ${s.tvaDeLa ? `plătitoare de TVA de la ${s.tvaDeLa}; ` : ''}${s.cod317 ? `cod special de TVA (art. 317) de la ${s.cod317DeLa || '?'}; ` : ''}administrator ${s.administrator || 'necompletat'}.
+Salariați: ${sal.length ? sal.map((a) => `${a.nume} (${a.tip === 'mandat' ? 'contract de mandat' : `CIM ${a.norma || 8}h`}, brut ${a.brut} lei, din ${a.deLa}${a.panaLa ? ' până ' + a.panaLa : ''})`).join('; ') : 'niciunul'}.
+Ce arată aplicația acum pe Acasă (de făcut):
+${tips.map((t) => '- ' + t.text).join('\n') || '- nimic'}
+Termene apropiate:
+${tm.map((t) => `- ${t.nume} pentru ${t.perioada}: ${dataRo(iso(t.termen))}`).join('\n') || '- niciunul'}`;
+}
+
 export function rezumatPentruAI({ note, setari, documente }, ecran) {
   const an = new Date().getFullYear();
   const b = balanta(note, setari, `${an}-01-01`, `${an}-12-31`);

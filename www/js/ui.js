@@ -103,5 +103,10 @@ export function eqHTML(d, c, suma, cont) {
 
 // Formatare simplă markdown pentru răspunsurile asistentului (doar bold și liste)
 export function mdLite(s) {
-  return e(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/^#{1,4}\s*(.+)$/gm, '<strong>$1</strong>');
+  return e(String(s || '').replace(/\n{3,}/g, '\n\n'))
+    .replace(/^#{1,4}\s*(.+)$/gm, '<strong>$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^\s*[*-]\s+/gm, '• ')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,;:!?)]|$)/gm, '$1<em>$2</em>')
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>');
 }

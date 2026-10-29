@@ -92,7 +92,7 @@ async function route(opt = {}) {
   document.body.classList.toggle('editor', (['documente', 'parteneri'].includes(key) && params.length > 0) || (key === 'registre' && params[1] === 'nou') || key === 'setari' || key === 'formulare' && params.length > 0);
   $$('[data-r]').forEach((b) => b.setAttribute('aria-current', b.dataset.r === key || (b.dataset.r === 'more' && MAI_MULT.includes(key)) ? 'page' : 'false'));
   document.querySelector('.brand small').textContent = ctx.setari.nume;
-  asistent.seteazaEcran(key, ctx);
+  asistent.seteazaEcran(key === 'declaratii' && params[0] === 'salarii' ? 'salarii' : key, ctx);
   const main = $('#main');
   const view = document.createElement('div'); // container nou la fiecare randare: fără ascultători rămași
   main.replaceChildren(view);

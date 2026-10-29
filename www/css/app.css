@@ -238,11 +238,12 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
 .msg.user { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 5px; }
 .msg.assistant { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 5px; }
 .msg.assistant strong { font-weight: 650; }
+.msg.assistant code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 18px; padding: 7px 13px; cursor: pointer; font-size: 13.5px; text-align: left; }
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .composer { display: flex; gap: 8px; align-items: flex-end; }
-.composer textarea { min-height: 44px; max-height: 140px; border-radius: 22px; padding: 11px 16px; }
+.composer textarea { resize: none; min-height: 44px; max-height: 140px; border-radius: 22px; padding: 11px 16px; }
 .composer .btn { border-radius: 22px; height: 44px; }
 
 /* Buton plutitor asistent (mobil) */
