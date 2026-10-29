@@ -1,0 +1,3 @@
+CHAT 502 938ms
+Asistentul AI nu a răspuns (This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.).
+EXTRACT 502 2610ms "Asistentul AI nu a răspuns (This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.)."
